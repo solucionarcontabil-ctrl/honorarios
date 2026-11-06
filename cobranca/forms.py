@@ -33,6 +33,7 @@ class ClienteForm(BootstrapMixin, forms.ModelForm):
         model = Cliente
         fields = [
             "nome", "nome_fantasia", "documento", "regime", "responsavel",
+            "tem_funcionarios", "inscricao_estadual", "inscricao_municipal",
             "contato", "email", "whatsapp",
             "cep", "endereco", "numero", "bairro", "cidade", "uf",
             "observacoes", "ativo",

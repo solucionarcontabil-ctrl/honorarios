@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Obrigações de {{ cliente }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><h4 class="mb-0">Obrigações de {{ cliente }}</h4><div class="text-muted">{{ cliente.get_regime_display }}{% if cliente.tem_funcionarios %} · com funcionários{% else %} · sem funcionários{% endif %}</div></div>
+  <a href="{% url 'cliente_detalhe' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+</div>
+<form method="post" class="mb-3">{% csrf_token %}
+  <input type="hidden" name="acao" value="padrao">
+  <button class="btn btn-outline-primary btn-sm"><i class="bi bi-magic"></i> Marcar as do regime {{ cliente.get_regime_display }}</button>
+  <label class="small ms-2"><input type="checkbox" name="substituir" class="form-check-input"> desmarcar as que não são do regime</label>
+</form>
+<form method="post">{% csrf_token %}
+<div class="card shadow-sm"><ul class="list-group list-group-flush">{% for o in obrigacoes %}
+  <li class="list-group-item"><label class="d-flex gap-2 align-items-start" style="cursor:pointer">
+    <input type="checkbox" name="obrigacoes" value="{{ o.pk }}" class="form-check-input mt-1" {% if o.pk in vinculadas %}checked{% endif %}>
+    <span><b>{{ o.sigla }}</b> — {{ o.nome }} <small class="text-muted">· {{ o.get_periodicidade_display }} · {{ o.descricao_prazo }}</small>
+      {% if cliente.regime in o.lista_regimes %}<span class="badge bg-light text-dark border">do regime</span>{% endif %}</span>
+  </label></li>{% endfor %}</ul></div>
+<button class="btn btn-primary mt-3"><i class="bi bi-check-lg"></i> Salvar</button>
+</form>
+{% endblock %}

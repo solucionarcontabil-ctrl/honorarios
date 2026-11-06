@@ -74,8 +74,23 @@ def painel(request):
         "reajustes": reajustes,
         "pendente_geracao": len([i for i in services.previa_mensalidades(competencia_atual) if not i["ja_existe"]]),
         "competencia_atual": competencia_atual,
+        **_resumo_escritorio(request.user, hoje),
     }
     return render(request, "cobranca/painel.html", ctx)
+
+
+def _resumo_escritorio(usuario, hoje):
+    from datetime import timedelta
+
+    from obrigacoes.models import Certificado, Entrega
+    abertas = Entrega.objects.filter(status__in=[Entrega.PENDENTE, Entrega.ANDAMENTO])
+    return {
+        "obrig_atrasadas": abertas.filter(prazo__lt=hoje).count(),
+        "obrig_minhas_semana": abertas.filter(responsavel=usuario, prazo__gte=hoje, prazo__lte=hoje + timedelta(days=7))
+        .select_related("cliente").order_by("prazo")[:8],
+        "certs_vencendo": Certificado.objects.filter(ativo=True, validade_fim__lte=hoje + timedelta(days=30))
+        .select_related("cliente").order_by("validade_fim")[:8],
+    }
 
 
 # ---------------------------------------------------------------- clientes
@@ -135,6 +150,10 @@ def cliente_detalhe(request, pk):
         "total_aberto": sum((c.valor for c in em_aberto), Decimal(0)),
         "total_atualizado": sum((c.valor_atualizado(config=config) for c in em_aberto if c.vencida), Decimal(0)),
         "reajustes": [r for c in cliente.contratos.all() for r in c.reajustes.all()],
+        "vinculos": cliente.obrigacoes.select_related("obrigacao"),
+        "certificados": cliente.certificados.filter(ativo=True),
+        "entregas_abertas": cliente.entregas.filter(status__in=["PENDENTE", "ANDAMENTO"])
+        .select_related("responsavel").order_by("prazo")[:20],
     })
 
 

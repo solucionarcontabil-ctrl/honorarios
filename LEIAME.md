@@ -17,6 +17,17 @@ dos clientes: cadastro, geração mensal, boleto/PIX, baixa, inadimplência e re
 | **Reajustes** | Busca o índice acumulado de 12 meses no Banco Central. Você confere, ajusta e aplica, e fica um histórico de cada reajuste |
 | **Lembretes por e-mail** | Automáticos antes e depois do vencimento (configurável) |
 
+### Módulo 2 — Gestão do escritório
+
+| Tela | Para quê |
+|---|---|
+| **Obrigações e tarefas** | Lista do mês com tudo que vence por cliente (DAS, DCTFWeb, EFD-Reinf, eSocial, FGTS Digital, SPED, ECD, ECF, DEFIS, IRPF…). Marca como entregue com nº do recibo, dispensa ("sem movimento"), passa para outra pessoa, filtra "só as minhas" |
+| **Gerar obrigações do mês** | Cria as obrigações de todos os clientes conforme o regime, com o prazo já calculado em dias úteis |
+| **Catálogo e prazos** | Lista de obrigações com regra de prazo (dia fixo, N-ésimo dia útil, último dia útil; antecipa/prorroga). Feriados nacionais automáticos e cadastro de feriados municipais (capital e litoral). **Os prazos vêm sugeridos — confira e ajuste.** |
+| **Tarefas avulsas** | Pedidos entre você e seu pai ("pedir extrato", "ligar para cliente"), com prazo e responsável |
+| **Certificados digitais** | Envie o .pfx (A1) e a senha: o sistema lê titular, CNPJ e validade e **não guarda o arquivo nem a senha**. A3/token cadastra à mão. Avisa 30 dias antes de vencer |
+| **Importar clientes** | Planilha .xlsx ou .csv (ex.: relatório de empresas do Domínio Web). Reconhece as colunas pelo cabeçalho, não duplica e já vincula as obrigações do regime |
+
 Tudo registra **quem fez** (você ou seu pai): quem criou, quem deu baixa e quem reajustou.
 
 ---
@@ -83,6 +94,7 @@ cd honorarios && git pull && docker compose up -d --build
 ```
 
 ## Rotina mensal sugerida
+0. Começo do mês: **Escritório → Gerar obrigações do mês**. No dia a dia, use **Obrigações e tarefas → só as minhas**.
 1. Dia 1: **Gerar mês**, conferir a prévia e gerar.
 2. Em **Cobranças → Em aberto**, selecionar tudo e clicar em **Emitir boleto/PIX (Asaas)**.
    Ou abrir cada cobrança e usar **Gerar PIX na minha chave**.

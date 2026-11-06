@@ -1,0 +1,88 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Obrigações{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Obrigações e tarefas</h4>
+  <div class="d-flex gap-2">
+    <a href="{% url 'tarefa_nova' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-lg"></i> Tarefa</a>
+    <a href="{% url 'obrig_gerar' %}?mes={{ mes|date:'Y-m' }}" class="btn btn-primary btn-sm"><i class="bi bi-lightning"></i> Gerar mês</a>
+    <a href="{% url 'obrig_catalogo' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-list-check"></i> Catálogo e prazos</a>
+  </div>
+</div>
+{% if pendentes_gerar %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center">
+  <span><i class="bi bi-lightning"></i> <b>{{ pendentes_gerar }}</b> obrigação(ões) com vencimento em {{ mes|mesano }} ainda não gerada(s).</span>
+  <a href="{% url 'obrig_gerar' %}?mes={{ mes|date:'Y-m' }}" class="btn btn-sm btn-warning">Gerar</a>
+</div>
+{% endif %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3"><a href="?visao=atrasadas" class="text-decoration-none"><div class="card card-kpi shadow-sm {% if visao == 'atrasadas' %}border-danger{% endif %}"><div class="card-body">
+    <div class="small text-muted">Atrasadas</div><div class="valor text-danger">{{ qtd_atrasadas }}</div></div></div></a></div>
+  <div class="col-6 col-md-3"><div class="card card-kpi shadow-sm"><div class="card-body">
+    <div class="small text-muted">Vencem hoje</div><div class="valor text-warning">{{ qtd_hoje }}</div></div></div></div>
+  <div class="col-6 col-md-3"><a href="?visao=semana" class="text-decoration-none"><div class="card card-kpi shadow-sm {% if visao == 'semana' %}border-primary{% endif %}"><div class="card-body">
+    <div class="small text-muted">Próximos 7 dias</div><div class="valor text-primary">{{ qtd_semana }}</div></div></div></a></div>
+  <div class="col-6 col-md-3"><div class="card card-kpi shadow-sm"><div class="card-body">
+    <div class="small text-muted">Concluído em {{ mes|mesano }}</div><div class="valor">{{ perc_mes }}% <small class="fs-6 text-muted">({{ feitas_mes }}/{{ total_mes }})</small></div>
+    <div class="progress mt-1" style="height:6px"><div class="progress-bar bg-success" style="width:{{ perc_mes }}%"></div></div></div></div></div>
+</div>
+<form class="row g-2 mb-3 align-items-end">
+  <input type="hidden" name="visao" value="{% if visao == 'mes' %}mes{% else %}{{ visao }}{% endif %}">
+  <div class="col-auto">
+    <div class="btn-group">
+      <a class="btn btn-outline-secondary btn-sm" href="?mes={{ mes_anterior|date:'Y-m' }}"><i class="bi bi-chevron-left"></i></a>
+      <input type="month" name="mes" value="{{ mes|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.visao.value='mes';this.form.submit()" style="width:150px">
+      <a class="btn btn-outline-secondary btn-sm" href="?mes={{ mes_seguinte|date:'Y-m' }}"><i class="bi bi-chevron-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-2"><select name="responsavel" class="form-select form-select-sm"><option value="">Todos</option><option value="eu" {% if filtros.responsavel == 'eu' %}selected{% endif %}>Só as minhas</option>
+    {% for u in usuarios %}<option value="{{ u.pk }}" {% if filtros.responsavel == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><select name="status" class="form-select form-select-sm"><option value="">Qualquer situação</option>
+    {% for v, n in status_opcoes %}<option value="{{ v }}" {% if filtros.status == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><select name="obrigacao" class="form-select form-select-sm"><option value="">Todas as obrigações</option>
+    {% for o in obrigacoes %}<option value="{{ o.pk }}" {% if filtros.obrigacao == o.pk|stringformat:'s' %}selected{% endif %}>{{ o.sigla }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><input name="q" value="{{ filtros.q }}" class="form-control form-control-sm" placeholder="Cliente…"></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i> Filtrar</button></div>
+</form>
+{% if visao != 'mes' %}<div class="mb-2"><span class="badge bg-secondary">Mostrando: {% if visao == 'atrasadas' %}todas as atrasadas{% else %}próximos 7 dias{% endif %}</span> <a href="?mes={{ mes|date:'Y-m' }}" class="small">voltar ao mês</a></div>{% endif %}
+
+<form method="post" action="{% url 'obrig_lote' %}" id="lote">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}"></form>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+  <thead class="table-light"><tr>
+    <th><input type="checkbox" class="form-check-input" onclick="document.querySelectorAll('.sel').forEach(e=>e.checked=this.checked)"></th>
+    <th>Prazo</th><th>Cliente</th><th>Obrigação / tarefa</th><th>Responsável</th><th>Situação</th><th class="text-end">Ação</th></tr></thead>
+  <tbody>{% for e in entregas %}
+    <tr class="{% if e.situacao == 'ATRASADA' %}table-danger{% elif not e.aberta %}text-muted{% endif %}">
+      <td>{% if e.aberta %}<input type="checkbox" class="form-check-input sel" name="ids" value="{{ e.pk }}" form="lote">{% endif %}</td>
+      <td class="text-nowrap">{{ e.prazo|date:"d/m D" }}</td>
+      <td>{% if e.cliente %}<a href="{% url 'cliente_detalhe' e.cliente.pk %}" class="text-decoration-none">{{ e.cliente }}</a>{% else %}<span class="text-muted">Escritório</span>{% endif %}</td>
+      <td><a href="{% url 'entrega_editar' e.pk %}?proximo={{ request.get_full_path|urlencode }}" class="text-decoration-none text-reset"><b>{{ e.titulo }}</b></a>
+        {% if e.obrigacao %}<small class="text-muted d-none d-lg-inline">· {{ e.obrigacao.nome }}</small>{% endif %}
+        {% if e.protocolo %}<br><small class="text-success"><i class="bi bi-file-earmark-check"></i> {{ e.protocolo }}</small>{% endif %}
+        {% if e.observacoes %}<br><small class="text-muted">{{ e.observacoes|truncatechars:80 }}</small>{% endif %}</td>
+      <td class="small">{{ e.responsavel_nome }}</td>
+      <td><span class="badge {% if e.situacao == 'ATRASADA' %}bg-danger{% elif e.situacao == 'HOJE' %}bg-warning text-dark{% elif e.status == 'ENTREGUE' %}bg-success{% elif e.status == 'DISPENSADA' %}bg-secondary{% elif e.status == 'ANDAMENTO' %}bg-info text-dark{% else %}bg-light text-dark border{% endif %}">{{ e.situacao_display }}</span>
+        {% if e.concluido_por %}<br><small class="text-muted">{{ e.concluido_por }} {{ e.concluido_em|date:"d/m" }}</small>{% endif %}</td>
+      <td class="text-end text-nowrap">
+        {% if e.aberta %}
+        <form method="post" action="{% url 'entrega_acao' e.pk 'entregar' %}" class="d-inline-flex gap-1">{% csrf_token %}
+          <input type="hidden" name="proximo" value="{{ request.get_full_path }}">
+          <input name="protocolo" class="form-control form-control-sm d-none d-xl-block" placeholder="nº recibo (opcional)" style="width:150px">
+          <button class="btn btn-sm btn-success" title="Marcar como entregue"><i class="bi bi-check-lg"></i></button></form>
+        <form method="post" action="{% url 'entrega_acao' e.pk 'dispensar' %}" class="d-inline">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}">
+          <button class="btn btn-sm btn-outline-secondary" title="Dispensada / sem movimento"><i class="bi bi-slash-circle"></i></button></form>
+        {% else %}
+        <form method="post" action="{% url 'entrega_acao' e.pk 'reabrir' %}" class="d-inline">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}">
+          <button class="btn btn-sm btn-link text-muted" title="Reabrir"><i class="bi bi-arrow-counterclockwise"></i></button></form>
+        {% endif %}
+      </td>
+    </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nada por aqui. {% if pendentes_gerar %}Use <b>Gerar mês</b> para criar as obrigações.{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% if entregas %}
+<div class="d-flex flex-wrap gap-2 mt-2">
+  <button name="acao" value="entregar" form="lote" class="btn btn-sm btn-success"><i class="bi bi-check2-all"></i> Marcar selecionadas como entregues</button>
+  <button name="acao" value="dispensar" form="lote" class="btn btn-sm btn-outline-secondary">Dispensar selecionadas</button>
+  {% for u in usuarios %}<button name="acao" value="resp_{{ u.pk }}" form="lote" class="btn btn-sm btn-outline-primary">Passar para {{ u.get_full_name|default:u.username }}</button>{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

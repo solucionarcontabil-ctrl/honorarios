@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Certificados digitais{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Certificados digitais</h4>
+  <a href="{% url 'certificado_novo' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-lg"></i> Cadastrar manualmente (A3 / token)</a>
+</div>
+<div class="card shadow-sm mb-3 border-primary"><div class="card-body">
+  <form method="post" action="{% url 'certificado_ler' %}" enctype="multipart/form-data" class="row g-2 align-items-end">{% csrf_token %}
+    <div class="col-md-4"><label class="form-label small fw-semibold">Certificado A1 (.pfx)</label>{{ pfx_form.arquivo }}</div>
+    <div class="col-md-3"><label class="form-label small fw-semibold">Senha</label>{{ pfx_form.senha }}</div>
+    <div class="col-md-3"><label class="form-label small fw-semibold">Onde fica guardado</label>{{ pfx_form.onde_esta }}</div>
+    <div class="col-md-2"><button class="btn btn-primary w-100"><i class="bi bi-upload"></i> Ler validade</button></div>
+  </form>
+  <div class="form-text"><i class="bi bi-shield-lock"></i> O sistema só lê titular, CNPJ/CPF e validade. O arquivo e a senha <b>não são guardados</b>.</div>
+</div></div>
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item"><a class="nav-link {% if situacao == 'ativos' %}active{% endif %}" href="?situacao=ativos">Ativos</a></li>
+  <li class="nav-item"><a class="nav-link {% if situacao == 'vencendo' %}active{% endif %}" href="?situacao=vencendo">Vencidos / vencendo em 30 dias</a></li>
+  <li class="nav-item"><a class="nav-link {% if situacao == 'todos' %}active{% endif %}" href="?situacao=todos">Todos (inclui substituídos)</a></li>
+</ul>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+  <thead class="table-light"><tr><th>Validade</th><th>Titular</th><th>Cliente</th><th>Tipo</th><th>Onde está</th><th>Procuração e-CAC</th></tr></thead>
+  <tbody>{% for c in certificados %}
+    <tr onclick="location='{% url 'certificado_editar' c.pk %}'" style="cursor:pointer" class="{% if not c.ativo %}text-muted{% endif %}">
+      <td class="text-nowrap">{{ c.validade_fim|date:"d/m/Y" }}
+        {% if c.ativo %}{% if c.situacao == 'VENCIDO' %}<span class="badge bg-danger">vencido</span>{% elif c.situacao == 'VENCENDO' %}<span class="badge bg-warning text-dark">{{ c.dias_para_vencer }} dias</span>{% endif %}{% else %}<span class="badge bg-secondary">substituído</span>{% endif %}</td>
+      <td>{{ c.titular }}<br><small class="text-muted">{{ c.documento }}</small></td>
+      <td>{{ c.cliente|default:"Escritório" }}</td>
+      <td>{{ c.get_modelo_display }} {{ c.tipo }}</td>
+      <td class="small">{{ c.onde_esta|default:"—" }}</td>
+      <td>{% if c.procuracao_ecac %}<i class="bi bi-check-circle text-success"></i>{% else %}—{% endif %}</td>
+    </tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum certificado.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% if sem_certificado %}
+<div class="small text-muted mt-3"><b>Clientes PJ sem certificado cadastrado ({{ sem_certificado|length }}):</b>
+  {% for c in sem_certificado|slice:":30" %}<a href="{% url 'certificado_novo' %}?cliente={{ c.pk }}" class="text-muted">{{ c }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% if sem_certificado|length > 30 %}…{% endif %}</div>
+{% endif %}
+{% endblock %}

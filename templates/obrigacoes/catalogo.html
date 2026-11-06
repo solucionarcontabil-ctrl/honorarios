@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titulo %}Catálogo de obrigações{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Catálogo de obrigações e prazos</h4>
+  <div class="d-flex gap-2">
+    <form method="post">{% csrf_token %}<button name="acao" value="padrao" class="btn btn-outline-secondary btn-sm">Recarregar itens padrão que faltam</button></form>
+    <a href="{% url 'obrigacao_nova' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nova obrigação</a>
+  </div>
+</div>
+<div class="alert alert-warning small"><i class="bi bi-exclamation-triangle"></i> {{ aviso }} Prazos estaduais (SPED Fiscal) e municipais (ISS) variam conforme o local.</div>
+<div class="card shadow-sm mb-4"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+  <thead class="table-light"><tr><th>Sigla</th><th>Nome</th><th>Periodicidade</th><th>Prazo</th><th>Dia não útil</th><th>Regimes</th><th class="text-center">Clientes</th></tr></thead>
+  <tbody>{% for o in obrigacoes %}
+    <tr onclick="location='{% url 'obrigacao_editar' o.pk %}'" style="cursor:pointer" class="{% if not o.ativa %}text-muted{% endif %}">
+      <td><b>{{ o.sigla }}</b></td><td>{{ o.nome }}</td><td>{{ o.get_periodicidade_display }}</td>
+      <td>{{ o.descricao_prazo }}</td><td class="small">{% if o.regra_prazo == 'DIA_FIXO' %}{{ o.get_ajuste_display }}{% else %}—{% endif %}</td>
+      <td class="small">{{ o.regimes }}{% if o.so_com_funcionarios %} <span class="badge bg-info text-dark">c/ funcionários</span>{% endif %}</td>
+      <td class="text-center">{{ o.qtd }}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+<div class="row g-3">
+  <div class="col-md-6"><div class="card shadow-sm"><div class="card-header bg-white d-flex justify-content-between"><b>Feriados estaduais / municipais</b><a href="{% url 'feriado_novo' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a></div>
+    <ul class="list-group list-group-flush">{% for f in feriados %}
+      <li class="list-group-item d-flex justify-content-between">{{ f }}<form method="post" action="{% url 'feriado_novo' %}">{% csrf_token %}<button name="excluir" value="{{ f.pk }}" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></form></li>
+    {% empty %}<li class="list-group-item text-muted small">Nenhum. Cadastre os feriados da capital e do litoral que afetam prazos municipais.</li>{% endfor %}</ul></div></div>
+  <div class="col-md-6"><div class="card shadow-sm"><div class="card-header bg-white"><b>Feriados nacionais (automáticos)</b></div>
+    <ul class="list-group list-group-flush small">{% for d, n in nacionais %}<li class="list-group-item py-1">{{ d|date:"d/m/Y D" }} — {{ n }}</li>{% endfor %}</ul></div></div>
+</div>
+{% endblock %}

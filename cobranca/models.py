@@ -109,6 +109,13 @@ class Cliente(models.Model):
         related_name="clientes", verbose_name="responsável no escritório",
     )
 
+    tem_funcionarios = models.BooleanField(
+        "tem funcionários / pró-labore", default=False,
+        help_text="Define se entram as obrigações de folha (eSocial, FGTS Digital...).",
+    )
+    inscricao_estadual = models.CharField("inscrição estadual", max_length=20, blank=True)
+    inscricao_municipal = models.CharField("inscrição municipal", max_length=20, blank=True)
+
     contato = models.CharField("pessoa de contato", max_length=100, blank=True)
     email = models.EmailField("e-mail para cobrança", blank=True)
     whatsapp = models.CharField("WhatsApp", max_length=20, blank=True, help_text="Com DDD. Ex.: 11999998888")

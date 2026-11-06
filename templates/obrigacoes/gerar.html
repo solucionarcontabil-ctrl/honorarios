@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Gerar obrigações{% endblock %}
+{% block conteudo %}
+<h4>Gerar obrigações do mês</h4>
+{% if catalogo_vazio %}<div class="alert alert-warning">O catálogo de obrigações está vazio. <a href="{% url 'obrig_catalogo' %}">Carregue o padrão</a> primeiro.</div>{% endif %}
+{% if sem_vinculo %}<div class="alert alert-info small"><b>{{ sem_vinculo|length }} cliente(s) sem nenhuma obrigação vinculada:</b>
+  {% for c in sem_vinculo|slice:":15" %}<a href="{% url 'cliente_obrigacoes' c.pk %}">{{ c }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% if sem_vinculo|length > 15 %}…{% endif %}</div>{% endif %}
+<form class="row g-2 mb-3 align-items-end">
+  <div class="col-auto"><label class="form-label small">Mês de vencimento</label><input type="month" name="mes" value="{{ mes|date:'Y-m' }}" class="form-control"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Ver prévia</button></div>
+</form>
+<form method="post">{% csrf_token %}<input type="hidden" name="mes" value="{{ mes|date:'Y-m' }}">
+<div class="alert alert-light border">Serão criadas <b>{{ qtd_novo }}</b> obrigação(ões) com vencimento em {{ mes|mesano }}. Itens já gerados aparecem em cinza e não serão duplicados.</div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Prazo</th><th>Cliente</th><th>Obrigação</th><th>Responsável</th></tr></thead>
+  <tbody>{% for i in itens %}<tr class="{% if i.ja_existe %}text-muted{% endif %}">
+    <td>{{ i.prazo|date:"d/m/Y D" }}</td><td>{{ i.cliente }}</td><td>{% if i.ja_existe %}<i class="bi bi-check2"></i> {% endif %}{{ i.titulo }}</td>
+    <td>{{ i.responsavel.get_full_name|default:i.responsavel.username|default_if_none:"—" }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="text-center text-muted py-4">Nada vence neste mês para os clientes vinculados.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% if qtd_novo %}<button class="btn btn-primary mt-3"><i class="bi bi-lightning"></i> Gerar</button>{% endif %}
+</form>
+{% endblock %}

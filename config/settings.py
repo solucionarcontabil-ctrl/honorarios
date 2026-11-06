@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "cobranca",
+    "obrigacoes",
 ]
 
 MIDDLEWARE = [

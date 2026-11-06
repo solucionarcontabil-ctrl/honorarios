@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Importar clientes{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Importar clientes de planilha</h4>
+  <a href="{% url 'clientes' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+</div>
+{% if not linhas %}
+<div class="alert alert-light border small">
+  <b>Como tirar a lista do Domínio Web:</b> gere o relatório de empresas/clientes, exporte para Excel e envie aqui.
+  Também serve qualquer planilha (.xlsx ou .csv) com cabeçalho. O sistema reconhece colunas como <i>Razão social, CNPJ, CPF,
+  Nome fantasia, E-mail, Telefone, Regime/Tributação, Inscrição estadual, Município, UF</i>.
+  Clientes já cadastrados (mesmo CNPJ/CPF) não são duplicados: o sistema só completa os campos vazios.
+</div>
+<div class="card shadow-sm"><div class="card-body">
+<form method="post" enctype="multipart/form-data" class="row g-3">{% csrf_token %}
+  <div class="col-md-5"><label class="form-label small fw-semibold">{{ form.arquivo.label|capfirst }}</label>{{ form.arquivo }}{% for e in form.arquivo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+  <div class="col-md-3"><label class="form-label small fw-semibold">{{ form.responsavel.label|capfirst }}</label>{{ form.responsavel }}</div>
+  <div class="col-md-4 d-flex align-items-end"><div class="form-check">{{ form.aplicar_obrigacoes }} <label class="form-check-label" for="{{ form.aplicar_obrigacoes.id_for_label }}">{{ form.aplicar_obrigacoes.label|capfirst }}</label></div></div>
+  <div class="col-12"><button class="btn btn-primary"><i class="bi bi-eye"></i> Ver prévia</button></div>
+</form></div></div>
+{% else %}
+<div class="alert alert-light border">
+  Colunas reconhecidas: {% for c in colunas %}<span class="badge bg-secondary">{{ c }}</span> {% endfor %}<br>
+  <b class="text-success">{{ qtd.novo }} novo(s)</b> · <b class="text-primary">{{ qtd.existe }} já cadastrado(s)</b> · <b class="text-danger">{{ qtd.erro }} com erro (serão ignorados)</b>
+</div>
+<form method="post">{% csrf_token %}
+  <button name="confirmar" value="1" class="btn btn-success mb-3"><i class="bi bi-check2-circle"></i> Confirmar importação</button>
+  <a href="{% url 'importar_clientes' %}" class="btn btn-outline-secondary mb-3">Enviar outra planilha</a>
+</form>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Linha</th><th>Situação</th><th>Nome</th><th>CNPJ/CPF</th><th>Regime</th><th>E-mail</th><th>Telefone</th><th>Cidade/UF</th></tr></thead>
+  <tbody>{% for l in linhas %}<tr class="{% if l.situacao == 'erro' %}table-danger{% elif l.situacao == 'existe' %}text-muted{% endif %}">
+    <td>{{ l.linha }}</td>
+    <td>{% if l.situacao == 'novo' %}<span class="badge bg-success">novo</span>{% elif l.situacao == 'existe' %}<span class="badge bg-primary">existe</span>{% else %}<span class="badge bg-danger">erro</span>{% endif %} <small>{{ l.motivo }}</small></td>
+    <td>{{ l.dados.nome }}{% if l.dados.nome_fantasia %}<br><small class="text-muted">{{ l.dados.nome_fantasia }}</small>{% endif %}</td>
+    <td>{{ l.dados.documento }}</td><td>{{ l.dados.regime }}</td><td class="small">{{ l.dados.email }}</td><td class="small">{{ l.dados.whatsapp }}</td>
+    <td class="small">{{ l.dados.cidade }}{% if l.dados.uf %}/{{ l.dados.uf }}{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endif %}
+{% endblock %}

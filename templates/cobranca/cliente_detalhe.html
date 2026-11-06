@@ -3,7 +3,7 @@
 {% block conteudo %}
 <div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
   <div><h4 class="mb-0">{{ cliente }} {% if not cliente.ativo %}<span class="badge bg-secondary">Inativo</span>{% endif %}</h4>
-    <div class="text-muted">{{ cliente.nome }} · {{ cliente.documento_formatado }} · {{ cliente.get_regime_display }}</div></div>
+    <div class="text-muted">{{ cliente.nome }} · {{ cliente.documento_formatado }} · {{ cliente.get_regime_display }}{% if cliente.tem_funcionarios %} · com funcionários{% endif %}{% if cliente.inscricao_estadual %} · IE {{ cliente.inscricao_estadual }}{% endif %}{% if cliente.inscricao_municipal %} · IM {{ cliente.inscricao_municipal }}{% endif %}</div></div>
   <div class="d-flex gap-2">
     <a href="{% url 'cobranca_nova' %}?cliente={{ cliente.pk }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus"></i> Cobrança avulsa</a>
     <a href="{% url 'cliente_editar' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Editar</a>
@@ -35,12 +35,32 @@
           {% if ct.cobra_13 %} · 13º em {{ ct.mes_13|stringformat:"02d" }}{% endif %}{% if not ct.ativo %} · <b>inativo</b>{% endif %}</small>
         </li>{% empty %}<li class="list-group-item text-muted">Nenhum honorário cadastrado.</li>{% endfor %}
       </ul></div>
+    <div class="card shadow-sm mt-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center"><b>Obrigações</b>
+        <a href="{% url 'cliente_obrigacoes' cliente.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a></div>
+      <div class="card-body small">{% for v in vinculos %}<span class="badge bg-light text-dark border me-1">{{ v.obrigacao.sigla }}</span>{% empty %}<span class="text-muted">Nenhuma vinculada.</span>{% endfor %}</div>
+    </div>
+    <div class="card shadow-sm mt-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center"><b>Certificados</b>
+        <a href="{% url 'certificado_novo' %}?cliente={{ cliente.pk }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i></a></div>
+      <ul class="list-group list-group-flush small">{% for c in certificados %}
+        <li class="list-group-item"><a href="{% url 'certificado_editar' c.pk %}">{{ c.get_modelo_display }} {{ c.tipo }}</a> até <b>{{ c.validade_fim|date:"d/m/Y" }}</b>
+          {% if c.situacao == 'VENCIDO' %}<span class="badge bg-danger">vencido</span>{% elif c.situacao == 'VENCENDO' %}<span class="badge bg-warning text-dark">{{ c.dias_para_vencer }} dias</span>{% endif %}</li>
+      {% empty %}<li class="list-group-item text-muted">Nenhum cadastrado.</li>{% endfor %}</ul>
+    </div>
     {% if reajustes %}<div class="card shadow-sm mt-3"><div class="card-header bg-white"><b>Histórico de reajustes</b></div>
       <ul class="list-group list-group-flush small">{% for r in reajustes %}
         <li class="list-group-item">{{ r.data|date:"d/m/Y" }} · {{ r.indice }} {{ r.percentual|floatformat:2 }}% · {{ r.valor_anterior|brl }} → <b>{{ r.valor_novo|brl }}</b></li>{% endfor %}
       </ul></div>{% endif %}
   </div>
   <div class="col-lg-8">
+    <div class="card shadow-sm mb-3"><div class="card-header bg-white d-flex justify-content-between align-items-center"><b>Obrigações e tarefas em aberto</b>
+      <a href="{% url 'tarefa_nova' %}?cliente={{ cliente.pk }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Tarefa</a></div>
+    <div class="table-responsive"><table class="table table-sm mb-0">
+      <tbody>{% for e in entregas_abertas %}<tr class="{% if e.atrasada %}table-danger{% endif %}">
+        <td class="text-nowrap">{{ e.prazo|date:"d/m/Y" }}</td><td><a href="{% url 'entrega_editar' e.pk %}?proximo={{ request.path|urlencode }}" class="text-reset">{{ e.titulo }}</a></td>
+        <td class="small">{{ e.responsavel_nome }}</td><td><span class="badge {% if e.atrasada %}bg-danger{% else %}bg-light text-dark border{% endif %}">{{ e.situacao_display }}</span></td></tr>
+      {% empty %}<tr><td class="text-muted text-center py-2">Nada em aberto.</td></tr>{% endfor %}</tbody></table></div></div>
     <div class="card shadow-sm"><div class="card-header bg-white"><b>Extrato de cobranças</b></div>
     <div class="table-responsive"><table class="table table-sm table-hover mb-0">
       <thead class="table-light"><tr><th>Comp.</th><th>Descrição</th><th>Vencimento</th><th class="text-end">Valor</th><th>Situação</th><th>Pago em</th></tr></thead>
