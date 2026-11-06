@@ -75,6 +75,23 @@ Tudo registra **quem fez** (você ou seu pai): quem criou, quem deu baixa e quem
 
 ---
 
+## Testar no seu computador (antes da nuvem)
+
+**Windows**
+1. Instale o **Python 3.12 ou 3.13** em python.org. Na primeira tela da instalação, **marque "Add python.exe to PATH"**.
+2. No GitHub, abra o repositório → botão verde **Code → Download ZIP** e descompacte numa pasta, por exemplo `C:\Sistema`.
+3. Abra a pasta `instalar` e dê dois cliques em **`1-INSTALAR.bat`** (uma vez só). Ele instala os componentes, prepara o banco e
+   pede para criar os usuários. Use o **nome completo igual ao campo "Contador" do Domínio**, por exemplo
+   "William França da Silveira" e "Washington Luiz Rosa da Silveira", para os clientes já virem com o responsável certo.
+4. Para usar: dois cliques em **`2-ABRIR O SISTEMA.bat`**. O navegador abre em `http://127.0.0.1:8000`.
+   Deixe a janela preta aberta enquanto usa; para desligar, feche-a.
+5. **`3-FAZER BACKUP.bat`** copia o banco e os arquivos para a pasta `backups`.
+
+**Mac/Linux:** `sh instalar/mac-linux.sh`
+
+Nesse modo, os dados ficam só no seu computador (arquivo `db.sqlite3`), e só esse computador acessa.
+É ideal para testar e importar os clientes. Na hora da nuvem, dá para levar esses dados junto ou começar do zero.
+
 ## Como colocar no ar (uma vez só)
 
 ### 1. Contratar um servidor (VPS)
