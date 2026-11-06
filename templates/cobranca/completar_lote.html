@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Completar cadastros{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+  <h4 class="mb-0">Completar cadastros em lote</h4>
+  <a href="{% url 'clientes' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Clientes</a>
+</div>
+<p class="small text-muted">Defina o que a importação não traz. O <b>regime</b> define as obrigações do mês, a apuração (Simples ou Presumido) e os encargos da folha; o <b>honorário</b> cria o contrato de cobrança (reajuste por IPCA, ajuste depois na ficha do cliente).
+{% if qtd_outro %}<br><span class="text-warning"><i class="bi bi-exclamation-triangle"></i> {{ qtd_outro }} cliente(s) ainda com regime "Outro".</span>{% endif %}</p>
+<ul class="nav nav-pills mb-2 small"><li class="nav-item"><a class="nav-link {% if filtro == 'incompletos' %}active{% endif %}" href="?filtro=incompletos">Só incompletos</a></li>
+  <li class="nav-item"><a class="nav-link {% if filtro == 'todos' %}active{% endif %}" href="?filtro=todos">Todos os ativos</a></li></ul>
+<form method="post">{% csrf_token %}
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+  <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" checked onclick="document.querySelectorAll('.sel').forEach(e=>e.checked=this.checked)"></th>
+    <th>Cliente</th><th style="width:190px">Regime</th><th style="width:170px">Responsável</th><th class="text-center">Tem funcionários</th><th style="width:130px">Honorário (R$)</th><th style="width:80px">Dia venc.</th></tr></thead>
+  <tbody>{% for c in clientes %}<tr>
+    <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="form-check-input sel" checked></td>
+    <td><a href="{% url 'cliente_detalhe' c.pk %}" class="fw-semibold text-decoration-none">{{ c }}</a><br><small class="text-muted">{{ c.documento_formatado }} · {{ c.cidade }}{% if c.observacoes %} · {{ c.observacoes|truncatechars:70 }}{% endif %}</small></td>
+    <td><select name="regime_{{ c.pk }}" class="form-select form-select-sm {% if c.regime == 'OUTRO' %}border-warning{% endif %}">{% for v, n in regimes %}<option value="{{ v }}" {% if c.regime == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></td>
+    <td><select name="resp_{{ c.pk }}" class="form-select form-select-sm"><option value="">—</option>{% for u in usuarios %}<option value="{{ u.pk }}" {% if c.responsavel_id == u.pk %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></td>
+    <td class="text-center"><input type="checkbox" name="func_{{ c.pk }}" class="form-check-input" {% if c.tem_funcionarios %}checked{% endif %}></td>
+    <td>{% with ct=c.contratos.all.0 %}{% if ct %}<span class="small">R$ {{ ct.valor_mensal }} <span class="text-muted">dia {{ ct.dia_vencimento }}</span></span>{% else %}<input name="valor_{{ c.pk }}" class="form-control form-control-sm text-end" inputmode="decimal" placeholder="0,00">{% endif %}{% endwith %}</td>
+    <td>{% if not c.contratos.all %}<input name="dia_{{ c.pk }}" value="10" class="form-control form-control-sm" inputmode="numeric">{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum cliente incompleto. 🎉</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% if clientes %}<div class="d-flex flex-wrap gap-3 align-items-center mt-2">
+  <div class="form-check"><input type="checkbox" name="aplicar_obrigacoes" id="ap" class="form-check-input" checked><label for="ap" class="form-check-label small">Vincular as obrigações padrão do regime (para quem mudou de regime ou ainda não tem)</label></div>
+  <button class="btn btn-primary btn-sm"><i class="bi bi-save"></i> Salvar selecionados</button></div>{% endif %}
+</form>
+{% endblock %}

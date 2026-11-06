@@ -26,7 +26,8 @@ dos clientes: cadastro, geração mensal, boleto/PIX, baixa, inadimplência e re
 | **Catálogo e prazos** | Lista de obrigações com regra de prazo (dia fixo, N-ésimo dia útil, último dia útil; antecipa/prorroga). Feriados nacionais automáticos e cadastro de feriados municipais (capital e litoral). **Os prazos vêm sugeridos — confira e ajuste.** |
 | **Tarefas avulsas** | Pedidos entre você e seu pai ("pedir extrato", "ligar para cliente"), com prazo e responsável |
 | **Certificados digitais** | Envie o .pfx (A1) e a senha: o sistema lê titular, CNPJ e validade e **não guarda o arquivo nem a senha**. A3/token cadastra à mão. Avisa 30 dias antes de vencer |
-| **Importar clientes** | Planilha .xlsx ou .csv (ex.: relatório de empresas do Domínio Web). Reconhece as colunas pelo cabeçalho, não duplica e já vincula as obrigações do regime |
+| **Importar clientes** | Planilha .xlsx, .xls ou .csv. Lê também o relatório **"Empresas — dados cadastrais" do Domínio** (uma ficha por empresa): razão social, fantasia, CNPJ/CPF, endereço, contatos, IE/IM, início de atividades (vai para o fiscal) e, nas observações, código do Domínio, natureza jurídica, CNAE e contador. Não duplica. Sem regime na planilha, o cliente entra como "Outro" (nunca supõe Simples) |
+| **Completar em lote** | Grade com todos os clientes incompletos para definir regime, responsável, se tem funcionários e o honorário (cria o contrato), já vinculando as obrigações do regime |
 
 ### Módulo 3 — Central de XMLs
 

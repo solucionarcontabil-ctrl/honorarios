@@ -496,3 +496,49 @@ def webhook_asaas(request):
     resultado = asaas.processar_webhook(evento)
     log.info("Webhook Asaas %s: %s", evento.get("event"), resultado)
     return JsonResponse({"ok": True, "resultado": resultado})
+
+
+# ---------------------------------------------------------------- completar cadastros em lote
+@login_required
+def completar_lote(request):
+    """Grade para completar o que a importação não traz: regime, responsável, funcionários, honorário."""
+    from obrigacoes.services import aplicar_padrao_regime
+    qs = Cliente.objects.filter(ativo=True).select_related("responsavel").prefetch_related("contratos", "obrigacoes")
+    filtro = request.GET.get("filtro", "incompletos")
+    if request.method == "POST":
+        alterados = obrig = contratos = 0
+        aplicar = bool(request.POST.get("aplicar_obrigacoes"))
+        usuarios = {str(u.pk): u for u in equipe()}
+        for c in qs.filter(pk__in=[int(i) for i in request.POST.getlist("ids") if i.isdigit()]):
+            antes = (c.regime, c.responsavel_id, c.tem_funcionarios)
+            regime = request.POST.get(f"regime_{c.pk}", c.regime)
+            if regime in dict(Cliente.REGIMES):
+                c.regime = regime
+            c.responsavel = usuarios.get(request.POST.get(f"resp_{c.pk}", ""), None)
+            c.tem_funcionarios = bool(request.POST.get(f"func_{c.pk}"))
+            if (c.regime, c.responsavel_id, c.tem_funcionarios) != antes:
+                c.save()
+                alterados += 1
+            if aplicar and c.regime != "OUTRO" and (antes[0] != c.regime or antes[2] != c.tem_funcionarios or not c.obrigacoes.exists()):
+                obrig += aplicar_padrao_regime(c)
+            valor = request.POST.get(f"valor_{c.pk}", "").strip()
+            if valor and not c.contratos.exists():
+                try:
+                    v = Decimal(valor.replace(".", "").replace(",", ".")) if "," in valor else Decimal(valor)
+                    dia = int(request.POST.get(f"dia_{c.pk}") or 10)
+                    if v > 0 and 1 <= dia <= 31:
+                        Contrato.objects.create(cliente=c, valor_mensal=v, dia_vencimento=dia,
+                                                data_inicio=timezone.localdate().replace(day=1),
+                                                mes_reajuste=timezone.localdate().month)
+                        contratos += 1
+                except (InvalidOperation, ValueError):
+                    messages.error(request, f"{c}: valor de honorário inválido.")
+        messages.success(request, f"{alterados} cliente(s) atualizado(s), {contratos} honorário(s) criado(s), "
+                                  f"{obrig} obrigação(ões) vinculada(s).")
+        return redirect(request.get_full_path())
+    if filtro == "incompletos":
+        qs = qs.filter(Q(regime="OUTRO") | Q(responsavel__isnull=True) | Q(contratos__isnull=True)).distinct()
+    return render(request, "cobranca/completar_lote.html", {
+        "clientes": qs.order_by("nome"), "filtro": filtro, "regimes": Cliente.REGIMES, "usuarios": equipe(),
+        "qtd_outro": Cliente.objects.filter(ativo=True, regime="OUTRO").count(),
+    })

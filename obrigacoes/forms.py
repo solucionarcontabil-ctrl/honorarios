@@ -76,7 +76,7 @@ class FeriadoForm(BootstrapMixin, forms.ModelForm):
 
 
 class ImportarClientesForm(BootstrapMixin, forms.Form):
-    arquivo = forms.FileField(label="planilha (.xlsx ou .csv)")
+    arquivo = forms.FileField(label="planilha (.xlsx, .xls ou .csv)")
     responsavel = forms.ModelChoiceField(queryset=None, required=False, label="responsável pelos novos clientes")
     aplicar_obrigacoes = forms.BooleanField(
         label="já vincular as obrigações padrão do regime", required=False, initial=True)
@@ -87,8 +87,8 @@ class ImportarClientesForm(BootstrapMixin, forms.Form):
 
     def clean_arquivo(self):
         f = self.cleaned_data["arquivo"]
-        if not f.name.lower().endswith((".xlsx", ".xlsm", ".csv", ".txt")):
-            raise forms.ValidationError("Envie um arquivo .xlsx ou .csv. (Arquivos .xls antigos: abra no Excel e salve como .xlsx.)")
+        if not f.name.lower().endswith((".xlsx", ".xlsm", ".xls", ".csv", ".txt")):
+            raise forms.ValidationError("Envie um arquivo .xlsx, .xls ou .csv.")
         if f.size > 10 * 1024 * 1024:
             raise forms.ValidationError("Planilha maior que 10 MB.")
         return f

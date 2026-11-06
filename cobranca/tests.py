@@ -142,3 +142,67 @@ class TelasTest(BaseTest):
         c = services.gerar_mensalidades(date(2026, 1, 1))[0]
         self.assertIn("wa.me/5511999998888", services.link_whatsapp(c))
         self.assertIn("janeiro/2026", services.montar_mensagem(c))
+
+
+class ImportacaoDominioTest(TestCase):
+    """Relatório 'Empresas — dados cadastrais' do Domínio (dados fictícios no mesmo formato)."""
+
+    def ficha(self, codigo, razao, doc, email="", inicio="10/02/2020"):
+        v = [""] * 21
+
+        def l(a, b="", c="", d=""):
+            row = list(v)
+            row[0], row[7], row[12], row[15] = a, b, c, d
+            return row
+        return [l("EMPRESAS"), l("DADOS CADASTRAIS"), l("Código:", float(codigo), "Data da inscrição:", "01/01/2020"),
+                l("Razão social:", razao, "Natureza Jurídica:", "Sociedade Empresária Limitada"),
+                l("Nome fantasia:", razao.split()[0], "Contador:", "FULANO DE TAL"),
+                l("Endereço:", "RUA A", "Início atividades:", inicio), l("Número:", "10"), l("Município:", "SAO PAULO"),
+                l("UF:", "SP"), l("CEP:", "01001000"), l("Telefone:", "(11) 2222-3333"), l("E-mail:", email),
+                l("CNPJ/CPF/CEI/CAEPF:", doc), l("Insc. municipal:", "1.234.567-8", "CNAE 2.3:", "5611-2/01"),
+                l("QUADRO SOCIETÁRIO"), l("MÓDULOS UTILIZADOS"), ["Módulos:", "Contabilidade, Folha"] + [""] * 19]
+
+    def test_fichas_viram_clientes(self):
+        from datetime import date
+
+        from fiscal.models import PerfilFiscal
+
+        from .importacao import fichas_para_tabela, importar, mapear_cabecalho, normalizar_documento
+        linhas = [[""] * 21] * 5 + self.ficha(12, "PADARIA PAO QUENTE LTDA", "11.222.333/0001-81", "a@a.com") \
+            + self.ficha(15, "CLINICA SORRISO", "45.723.174/0001-10")
+        tabela = fichas_para_tabela(linhas)
+        self.assertEqual(len(tabela), 3)
+        mapa = mapear_cabecalho(tabela[0])
+        self.assertEqual(normalizar_documento(tabela[1][mapa["documento"]]), "11222333000181")
+        # passa pelo mesmo caminho da tela (analisar com o conteúdo já convertido em linhas)
+        from . import importacao
+        orig = importacao.ler_linhas
+        importacao.ler_linhas = lambda n, c: linhas
+        try:
+            analisadas, mapa, erro = importacao.analisar("empresas.xls", b"")
+        finally:
+            importacao.ler_linhas = orig
+        self.assertIsNone(erro)
+        self.assertEqual([a["situacao"] for a in analisadas], ["novo", "novo"])
+        importar(analisadas)
+        p = Cliente.objects.get(documento="11222333000181")
+        self.assertEqual((p.regime, p.cidade, p.cep, p.inscricao_municipal), ("OUTRO", "SAO PAULO", "01001000", "1.234.567-8"))
+        self.assertIn("CNAE 2.3 5611-2/01", p.observacoes)
+        self.assertIn("Código 12", p.observacoes)
+        self.assertEqual(PerfilFiscal.objects.get(cliente=p).data_inicio_atividade, date(2020, 2, 10))
+
+    def test_completar_em_lote(self):
+        from obrigacoes.models import ClienteObrigacao
+        u = get_user_model().objects.create_superuser("contador", "c@c.com", "senha-muito-forte-1")
+        c = Cliente.objects.create(nome="Padaria", documento="11222333000181", regime="OUTRO")
+        self.client.force_login(u)
+        self.assertContains(self.client.get("/clientes/completar/"), "Padaria")
+        self.client.post("/clientes/completar/", {"ids": [c.pk], f"regime_{c.pk}": "SIMPLES", f"resp_{c.pk}": u.pk,
+                                                  f"func_{c.pk}": "on", f"valor_{c.pk}": "1.250,00", f"dia_{c.pk}": "5",
+                                                  "aplicar_obrigacoes": "on"})
+        c.refresh_from_db()
+        self.assertEqual((c.regime, c.responsavel, c.tem_funcionarios), ("SIMPLES", u, True))
+        ct = c.contratos.get()
+        self.assertEqual((ct.valor_mensal, ct.dia_vencimento), (Decimal("1250.00"), 5))
+        self.assertTrue(ClienteObrigacao.objects.filter(cliente=c, obrigacao__sigla="ESOCIAL").exists())
+        self.assertNotContains(self.client.get("/clientes/completar/"), "11.222.333/0001-81")  # saiu dos incompletos

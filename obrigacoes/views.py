@@ -327,10 +327,14 @@ def importar_clientes(request):
         vinculadas = 0
         if dados["aplicar"]:
             docs = [l["dados"]["documento"] for l in dados["linhas"] if l["situacao"] == "novo"]
-            for c in Cliente.objects.filter(documento__in=docs):
+            for c in Cliente.objects.filter(documento__in=docs).exclude(regime="OUTRO"):
                 vinculadas += services.aplicar_padrao_regime(c)
         messages.success(request, f"{criados} cliente(s) criado(s), {atualizados} completado(s)"
                          + (f", {vinculadas} vínculo(s) de obrigação." if dados["aplicar"] else "."))
+        if Cliente.objects.filter(ativo=True, regime="OUTRO").exists():
+            messages.warning(request, "Clientes sem regime tributário foram importados como 'Outro'. "
+                                      "Complete regime, responsável e honorário na tela de completar em lote.")
+            return redirect("clientes_completar")
         return redirect("clientes")
 
     form = ImportarClientesForm(request.POST or None, request.FILES or None)
