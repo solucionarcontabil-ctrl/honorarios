@@ -10,5 +10,7 @@ urlpatterns = [
          success_url="/", extra_context={"titulo": "Trocar senha"}), name="trocar_senha"),
     path("", include("obrigacoes.urls")),
     path("", include("xmls.urls")),
+    path("", include("portal.urls")),
+    path("", include("rentabilidade.urls")),
     path("", include("cobranca.urls")),
 ]

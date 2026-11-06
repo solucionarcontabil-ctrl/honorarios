@@ -1,0 +1,18 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Protocolo {{ p.codigo }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <a href="{% url 'portal_protocolos' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Protocolos</a>
+  <button onclick="print()" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer"></i> Imprimir</button>
+</div>
+<div class="card shadow-sm"><div class="card-body">
+  <h5>Protocolo nº {{ p.codigo }} <small class="text-muted">· {{ p.get_tipo_display }}</small></h5>
+  <p class="small text-muted">{{ p.data|date:"d/m/Y H:i" }} · {{ p.get_meio_display }} · {{ config.nome_escritorio }}</p>
+  <ul class="list-group mb-3">{% for i in itens %}
+    <li class="list-group-item d-flex justify-content-between">{{ i.descricao }}{% if i.competencia %} <small class="text-muted">({{ i.competencia }})</small>{% endif %}
+      {% if i.arquivo and p.tipo == 'ENTREGA' %}<a href="{% url 'portal_baixar' i.arquivo.pk %}" class="btn btn-sm btn-outline-primary no-print"><i class="bi bi-download"></i></a>{% endif %}</li>{% endfor %}</ul>
+  {% if p.observacoes %}<p class="small">{{ p.observacoes|linebreaksbr }}</p>{% endif %}
+  {% if p.confirmado %}<div class="alert alert-success small mb-0"><i class="bi bi-check-circle"></i> Confirmado em {{ p.confirmado_em|date:"d/m/Y H:i" }} ({{ p.get_confirmacao_forma_display }}).</div>
+  {% elif p.tipo == 'ENTREGA' %}<form method="post" action="{% url 'portal_protocolo_confirmar' p.pk %}">{% csrf_token %}<button class="btn btn-success"><i class="bi bi-check2-circle"></i> Confirmo que recebi estes documentos</button></form>{% endif %}
+</div></div>
+{% endblock %}

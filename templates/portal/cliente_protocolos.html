@@ -1,0 +1,10 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Protocolos{% endblock %}
+{% block conteudo %}
+<h4 class="mb-3">Protocolos</h4>
+<div class="card shadow-sm"><div class="list-group list-group-flush">{% for p in protocolos %}
+  <a href="{% url 'portal_protocolo' p.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+    <span><b>{{ p.codigo }}</b> · {% if p.tipo == 'ENTREGA' %}Escritório entregou{% else %}Você enviou{% endif %} {{ p.itens.all|length }} item(ns)<br><small class="text-muted">{{ p.data|date:"d/m/Y H:i" }} · {{ p.get_meio_display }}</small></span>
+    {% if p.confirmado %}<span class="badge bg-success">confirmado</span>{% else %}<span class="badge bg-warning text-dark">confirmar</span>{% endif %}</a>
+{% empty %}<div class="list-group-item text-muted">Nenhum protocolo.</div>{% endfor %}</div></div>
+{% endblock %}

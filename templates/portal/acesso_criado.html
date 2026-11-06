@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Acesso criado{% endblock %}
+{% block conteudo %}
+<div class="card shadow-sm border-success" style="max-width:680px"><div class="card-body">
+  <h5 class="text-success"><i class="bi bi-check-circle"></i> {% if redefinida %}Nova senha gerada{% else %}Acesso criado{% endif %} — {{ acesso.nome }}</h5>
+  <p class="mb-1">Login: <code class="fs-6">{{ acesso.usuario.username }}</code></p>
+  <p>Senha provisória: <code class="fs-5">{{ senha }}</code></p>
+  <div class="alert alert-warning small"><i class="bi bi-exclamation-triangle"></i> Esta senha aparece <b>só agora</b>. Envie ao cliente e peça para ele trocar no primeiro acesso (menu "Minha senha" do portal).</div>
+  <textarea id="msg" class="form-control mb-2" rows="6">{{ texto }}</textarea>
+  <div class="d-flex gap-2">
+    <a href="{{ link }}" target="_blank" class="btn btn-success btn-sm"><i class="bi bi-whatsapp"></i> Enviar no WhatsApp</a>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copiar('msg',this)"><i class="bi bi-clipboard"></i> Copiar</button>
+    <a href="{% url 'acessos' %}" class="btn btn-outline-primary btn-sm ms-auto">Concluir</a>
+  </div>
+</div></div>
+{% endblock %}

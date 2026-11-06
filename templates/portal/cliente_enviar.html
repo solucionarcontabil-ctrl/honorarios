@@ -1,0 +1,19 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Enviar documentos{% endblock %}
+{% block conteudo %}
+<h4 class="mb-3">Enviar documentos ao escritório</h4>
+<div class="card shadow-sm"><div class="card-body">
+<form method="post" enctype="multipart/form-data" id="envio">{% csrf_token %}
+  <div class="row g-3">
+    <div class="col-md-6"><label class="form-label fw-semibold">O que você está enviando?</label>{{ form.categoria }}</div>
+    <div class="col-md-6"><label class="form-label fw-semibold">Mês de referência</label>{{ form.competencia }}</div>
+    <div class="col-12"><label class="form-label fw-semibold">Arquivos</label>
+      <input type="file" name="arquivos" multiple class="form-control" required>
+      <div class="form-text">PDF, fotos, planilhas, OFX, XML ou ZIP, até 25 MB cada. No celular, você pode tirar foto do documento.</div></div>
+    <div class="col-12"><label class="form-label fw-semibold">Observação (opcional)</label>{{ form.observacao }}</div>
+  </div>
+  <button class="btn btn-success btn-lg mt-4 w-100" id="bt"><i class="bi bi-cloud-upload"></i> Enviar</button>
+</form></div></div>
+<p class="small text-muted mt-3"><i class="bi bi-shield-lock"></i> Os arquivos vão direto para o escritório e você recebe um número de protocolo.</p>
+{% endblock %}
+{% block scripts %}<script>document.getElementById('envio').addEventListener('submit',()=>{const b=document.getElementById('bt');b.disabled=true;b.innerHTML='<span class="spinner-border spinner-border-sm"></span> Enviando…'})</script>{% endblock %}

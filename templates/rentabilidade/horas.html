@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}Horas{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Apontamento de horas {% if alvo != user %}— {{ alvo.get_full_name|default:alvo.username }}{% endif %}</h4>
+  <a href="{% url 'rentabilidade' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Rentabilidade</a>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-lg-6"><div class="card shadow-sm h-100 {% if rodando %}border-danger{% endif %}"><div class="card-header bg-white fw-semibold"><i class="bi bi-stopwatch"></i> Cronômetro</div><div class="card-body">
+    {% if rodando %}
+      <div class="d-flex justify-content-between align-items-center">
+        <div><div class="fs-3 fw-semibold text-danger" id="relogio" data-inicio="{{ rodando.inicio|date:'c' }}">{{ rodando.horas_texto }}</div>
+          <div class="small">{{ rodando.cliente|default:"Escritório" }} · {{ rodando.get_atividade_display }}{% if rodando.descricao %} · {{ rodando.descricao }}{% endif %}</div></div>
+        <form method="post" action="{% url 'horas_cronometro' 'parar' %}">{% csrf_token %}<button class="btn btn-danger"><i class="bi bi-stop-fill"></i> Parar</button></form>
+      </div>
+    {% else %}
+      <form method="post" action="{% url 'horas_cronometro' 'iniciar' %}" class="row g-2">{% csrf_token %}
+        <div class="col-md-6"><select name="cliente" class="form-select form-select-sm"><option value="">Escritório (interno)</option>{% for c in clientes %}<option value="{{ c.pk }}">{{ c }}</option>{% endfor %}</select></div>
+        <div class="col-md-6"><select name="atividade" class="form-select form-select-sm">{% for v, n in atividades %}<option value="{{ v }}">{{ n }}</option>{% endfor %}</select></div>
+        <div class="col-md-9"><input name="descricao" class="form-control form-control-sm" placeholder="O que vai fazer (opcional)"></div>
+        <div class="col-md-3"><button class="btn btn-success btn-sm w-100"><i class="bi bi-play-fill"></i> Iniciar</button></div>
+      </form>
+    {% endif %}
+  </div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold"><i class="bi bi-pencil-square"></i> Lançar tempo já feito</div><div class="card-body">
+    <form method="post" action="{% url 'horas_lancar' %}" class="row g-2">{% csrf_token %}
+      <div class="col-md-6"><select name="cliente" class="form-select form-select-sm"><option value="">Escritório (interno)</option>{% for c in clientes %}<option value="{{ c.pk }}">{{ c }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><select name="atividade" class="form-select form-select-sm">{% for v, n in atividades %}<option value="{{ v }}">{{ n }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><input type="date" name="data" value="{{ hoje|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+      <div class="col-md-3"><input name="tempo" class="form-control form-control-sm" placeholder="1:30" required title="1:30, 1h30, 90 (min) ou 1,5h"></div>
+      <div class="col-md-5"><input name="descricao" class="form-control form-control-sm" placeholder="Descrição"></div>
+      <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Lançar</button> <small class="text-muted ms-2">Dica: ao marcar uma obrigação como entregue, informe o tempo e ele entra aqui sozinho.</small></div>
+    </form>
+  </div></div></div>
+</div>
+<form class="row g-2 mb-2 align-items-end">
+  <div class="col-auto"><label class="form-label small">De</label><input type="date" name="de" value="{{ de|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até</label><input type="date" name="ate" value="{{ ate|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  {% if usuarios %}<div class="col-auto"><label class="form-label small">Pessoa</label><select name="usuario" class="form-select form-select-sm"><option value="">Eu</option>{% for u in usuarios %}<option value="{{ u.pk }}" {% if alvo.pk == u.pk and alvo != user %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></div>{% endif %}
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Ver</button></div>
+  <div class="col text-end fw-semibold">Total: {{ total }}</div>
+</form>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+  <thead class="table-light"><tr><th>Data</th><th>Cliente</th><th>Atividade</th><th>Descrição</th><th class="text-end">Tempo</th><th></th></tr></thead>
+  <tbody>{% for a in apontamentos %}<tr class="{% if a.em_andamento %}table-danger{% endif %}">
+    <td>{{ a.data|date:"d/m D" }}</td><td>{{ a.cliente|default:"Escritório" }}</td><td class="small">{{ a.get_atividade_display }}</td>
+    <td class="small">{{ a.descricao }}{% if a.entrega %} <span class="badge bg-light text-dark border">obrigação</span>{% endif %}</td>
+    <td class="text-end">{% if a.em_andamento %}<i class="bi bi-record-circle text-danger"></i> rodando{% else %}{{ a.horas_texto }}{% endif %}</td>
+    <td class="text-end">{% if not a.em_andamento %}<form method="post" action="{% url 'horas_excluir' a.pk %}" onsubmit="return confirm('Excluir lançamento?')">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></form>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum lançamento no período.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}<script>
+const r = document.getElementById('relogio');
+if (r) { const ini = new Date(r.dataset.inicio); const tick = () => { const m = Math.floor((Date.now() - ini) / 60000); const s = Math.floor((Date.now() - ini) / 1000) % 60; r.textContent = Math.floor(m/60) + 'h' + String(m%60).padStart(2,'0') + ':' + String(s).padStart(2,'0'); }; tick(); setInterval(tick, 1000); }
+</script>{% endblock %}

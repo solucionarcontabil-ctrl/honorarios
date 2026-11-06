@@ -61,6 +61,10 @@ class Configuracao(models.Model):
         "lembretes após vencimento (dias)", max_length=40, default="1,7,15",
         help_text="Lista separada por vírgula. Ex.: 1,7,15",
     )
+    margem_alvo_percentual = models.DecimalField(
+        "margem desejada por cliente (%)", max_digits=5, decimal_places=2, default=Decimal("30.00"),
+        help_text="Usada no relatório de rentabilidade para sugerir o honorário ideal.",
+    )
     lembretes_email_ativos = models.BooleanField("enviar lembretes automáticos por e-mail", default=False)
 
     class Meta:

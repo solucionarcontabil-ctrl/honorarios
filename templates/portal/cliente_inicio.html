@@ -1,0 +1,21 @@
+{% extends "portal/base_portal.html" %}{% load moeda %}
+{% block conteudo %}
+<h4 class="mb-3">Olá, {{ request.acesso_portal.nome|default:"" }}!</h4>
+{% if pendentes_confirmar %}<div class="alert alert-info d-flex justify-content-between align-items-center"><span><i class="bi bi-journal-check"></i> Há {{ pendentes_confirmar }} entrega(s) de documentos aguardando sua confirmação.</span><a href="{% url 'portal_protocolos' %}" class="btn btn-sm btn-info">Ver</a></div>{% endif %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><a href="{% url 'portal_documentos' %}" class="text-decoration-none"><div class="card card-atalho shadow-sm text-center h-100"><div class="card-body"><i class="bi bi-folder2-open fs-1 text-primary"></i><div class="fw-semibold mt-1">Meus documentos</div>{% if novos %}<span class="badge bg-danger">{{ novos|length }} novo{{ novos|length|pluralize }}</span>{% endif %}</div></div></a></div>
+  <div class="col-6 col-md-3"><a href="{% url 'portal_enviar' %}" class="text-decoration-none"><div class="card card-atalho shadow-sm text-center h-100"><div class="card-body"><i class="bi bi-cloud-upload fs-1 text-success"></i><div class="fw-semibold mt-1">Enviar documentos</div><small class="text-muted">extratos, notas, recibos</small></div></div></a></div>
+  <div class="col-6 col-md-3"><a href="{% url 'portal_honorarios' %}" class="text-decoration-none"><div class="card card-atalho shadow-sm text-center h-100"><div class="card-body"><i class="bi bi-receipt fs-1 text-warning"></i><div class="fw-semibold mt-1">Honorários</div>{% if honorarios %}<span class="badge bg-warning text-dark">{{ honorarios|length }} em aberto</span>{% endif %}</div></div></a></div>
+  <div class="col-6 col-md-3"><a href="{% url 'portal_protocolos' %}" class="text-decoration-none"><div class="card card-atalho shadow-sm text-center h-100"><div class="card-body"><i class="bi bi-journal-check fs-1 text-secondary"></i><div class="fw-semibold mt-1">Protocolos</div><small class="text-muted">histórico de entregas</small></div></div></a></div>
+</div>
+<div class="row g-3">
+  <div class="col-md-6"><div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold"><i class="bi bi-calendar-event"></i> Guias a vencer</div>
+    <ul class="list-group list-group-flush">{% for g in guias %}
+      <a href="{% url 'portal_baixar' g.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between"><span><i class="bi bi-file-earmark-pdf"></i> {{ g.titulo }}{% if not g.visualizado_em %} <span class="badge bg-danger">novo</span>{% endif %}</span><span class="text-nowrap small">{{ g.vencimento|date:"d/m" }}{% if g.valor %} · <b>{{ g.valor|brl }}</b>{% endif %}</span></a>
+    {% empty %}<li class="list-group-item text-muted">Nenhuma guia a vencer.</li>{% endfor %}</ul></div></div>
+  <div class="col-md-6"><div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold"><i class="bi bi-stars"></i> Documentos novos</div>
+    <ul class="list-group list-group-flush">{% for d in novos %}
+      <a href="{% url 'portal_baixar' d.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between"><span><i class="bi bi-file-earmark"></i> {{ d.titulo }}</span><span class="small text-muted">{{ d.enviado_em|date:"d/m" }}</span></a>
+    {% empty %}<li class="list-group-item text-muted">Você já baixou todos os documentos.</li>{% endfor %}</ul></div></div>
+</div>
+{% endblock %}

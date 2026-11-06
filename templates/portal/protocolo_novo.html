@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Novo protocolo{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Novo protocolo</h4>
+  <a href="{% url 'protocolos' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+</div>
+<form method="post" novalidate>{% csrf_token %}
+<div class="card shadow-sm mb-3"><div class="card-body"><div class="row g-3">
+  {% for campo in form %}<div class="{% if campo.name == 'observacoes' %}col-12{% else %}col-md-4{% endif %}">
+    <label class="form-label small fw-semibold">{{ campo.label|capfirst }}</label>{{ campo }}
+    {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
+    {% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>{% endfor %}
+</div></div></div>
+<div class="card shadow-sm"><div class="card-header bg-white"><b>Itens</b> <small class="text-muted">(documentos entregues ou recebidos)</small></div>
+<div class="card-body"><table class="table table-sm mb-2" id="itens"><thead><tr><th>Descrição</th><th style="width:130px">Competência</th><th style="width:90px">Qtd.</th></tr></thead>
+  <tbody>{% for i in linhas %}<tr><td><input name="item_descricao" class="form-control form-control-sm" placeholder="{% if forloop.first %}Ex.: Guia DAS, holerites, livro diário, extrato bancário…{% endif %}"></td>
+    <td><input name="item_competencia" class="form-control form-control-sm" placeholder="10/2026"></td>
+    <td><input name="item_quantidade" class="form-control form-control-sm" value="1" inputmode="numeric"></td></tr>{% endfor %}</tbody></table>
+  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="const t=document.querySelector('#itens tbody');t.appendChild(t.rows[t.rows.length-1].cloneNode(true));t.rows[t.rows.length-1].querySelectorAll('input').forEach((e,i)=>e.value=i==2?'1':'')"><i class="bi bi-plus"></i> Mais uma linha</button>
+</div></div>
+<button class="btn btn-primary mt-3"><i class="bi bi-check-lg"></i> Criar protocolo</button>
+</form>
+{% endblock %}

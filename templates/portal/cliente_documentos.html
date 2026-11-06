@@ -1,0 +1,22 @@
+{% extends "portal/base_portal.html" %}{% load moeda %}
+{% block titulo %}Documentos{% endblock %}
+{% block conteudo %}
+<h4 class="mb-3">Documentos do escritório</h4>
+{% if categorias|length > 1 %}<div class="d-flex flex-wrap gap-2 mb-3">
+  <a href="?" class="btn btn-sm {% if not cat %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos</a>
+  {% for v, n in categorias %}<a href="?categoria={{ v }}" class="btn btn-sm {% if cat == v %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ n }}</a>{% endfor %}
+</div>{% endif %}
+<div class="card shadow-sm mb-4"><div class="list-group list-group-flush">{% for a in arquivos %}
+  <a href="{% url 'portal_baixar' a.pk %}" class="list-group-item list-group-item-action">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div><i class="bi bi-file-earmark-arrow-down text-primary"></i> <b>{{ a.titulo }}</b>{% if not a.visualizado_em %} <span class="badge bg-danger">novo</span>{% endif %}
+        <div class="small text-muted">{{ a.get_categoria_display }}{% if a.competencia %} · {{ a.competencia|date:"m/Y" }}{% endif %} · {{ a.extensao|upper }} {{ a.tamanho_legivel }}</div>
+        {% if a.observacao %}<div class="small">{{ a.observacao }}</div>{% endif %}</div>
+      <div class="text-end small text-nowrap">{% if a.vencimento %}vence <b>{{ a.vencimento|date:"d/m/Y" }}</b><br>{% endif %}{% if a.valor %}<b>{{ a.valor|brl }}</b><br>{% endif %}<span class="text-muted">{{ a.enviado_em|date:"d/m/Y" }}</span></div>
+    </div></a>
+{% empty %}<div class="list-group-item text-muted">Nenhum documento.</div>{% endfor %}</div></div>
+{% if enviados %}<h6>Enviados por você</h6>
+<div class="card shadow-sm"><ul class="list-group list-group-flush small">{% for a in enviados %}
+  <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-file-earmark-check"></i> {{ a.titulo }} <span class="text-muted">· {{ a.get_categoria_display }}</span></span><span class="text-muted">{{ a.enviado_em|date:"d/m/Y" }}{% if a.processado_em %} · <span class="text-success">recebido pelo escritório</span>{% endif %}</span></li>
+{% endfor %}</ul></div>{% endif %}
+{% endblock %}

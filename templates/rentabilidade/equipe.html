@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Custo da hora{% endblock %}
+{% block conteudo %}
+<h4 class="mb-3">Custo da hora da equipe</h4>
+<div class="alert alert-light border small">
+  <b>Como calcular:</b> some o custo mensal da pessoa (salário ou pró-labore + encargos) e a parte dela nos custos fixos do escritório (aluguel, sistemas, internet, energia, contador de apoio…). Divida pelas horas <b>produtivas</b> do mês (em geral 120 a 140, não 176).<br>
+  Exemplo: R$ 6.000 de custo pessoal + R$ 2.000 de estrutura = R$ 8.000 ÷ 130 h ≈ <b>R$ 61,50/h</b>.
+</div>
+<form method="post">{% csrf_token %}
+<div class="card shadow-sm mb-3" style="max-width:640px"><table class="table mb-0 align-middle">
+  <thead class="table-light"><tr><th>Pessoa</th><th style="width:200px">Custo da hora (R$)</th></tr></thead>
+  <tbody>{% for m in membros %}<tr><td>{{ m.usuario.get_full_name|default:m.usuario.username }}</td><td><input name="custo_{{ m.usuario.pk }}" value="{{ m.custo_hora|floatformat:2 }}" class="form-control" inputmode="decimal"></td></tr>{% endfor %}</tbody>
+</table></div>
+<div class="mb-3" style="max-width:300px"><label class="form-label small fw-semibold">Margem desejada por cliente (%)</label><input name="margem" value="{{ config.margem_alvo_percentual|floatformat:0 }}" class="form-control" inputmode="decimal"></div>
+<button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>
+</form>
+{% endblock %}

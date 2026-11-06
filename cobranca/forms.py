@@ -1,5 +1,6 @@
 from datetime import date
 
+from cobranca.equipe import equipe
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -42,7 +43,7 @@ class ClienteForm(BootstrapMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["responsavel"].queryset = get_user_model().objects.filter(is_active=True)
+        self.fields["responsavel"].queryset = equipe()
         self.fields["responsavel"].label_from_instance = lambda u: u.get_full_name() or u.username
 
 

@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     "cobranca",
     "obrigacoes",
     "xmls",
+    "portal",
+    "rentabilidade",
 ]
 
 MIDDLEWARE = [
@@ -41,6 +43,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "portal.middleware.PortalMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -82,6 +85,9 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 USE_THOUSAND_SEPARATOR = True
+
+# Arquivos enviados (portal). NÃO são servidos publicamente: só por views com permissão.
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", BASE_DIR / "media"))
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

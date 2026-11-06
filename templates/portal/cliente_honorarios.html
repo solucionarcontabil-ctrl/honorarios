@@ -1,0 +1,27 @@
+{% extends "portal/base_portal.html" %}{% load moeda %}
+{% block titulo %}Honorários{% endblock %}
+{% block conteudo %}
+<h4 class="mb-3">Honorários</h4>
+{% for c in abertas %}
+<div class="card shadow-sm mb-3 {% if c.vencida %}border-danger{% endif %}"><div class="card-body">
+  <div class="d-flex justify-content-between flex-wrap gap-2">
+    <div><b>{{ c.descricao }}</b><div class="small text-muted">Vencimento {{ c.vencimento|date:"d/m/Y" }}{% if c.vencida %} · <span class="text-danger">vencido há {{ c.dias_atraso }} dia{{ c.dias_atraso|pluralize }}</span>{% endif %}</div></div>
+    <div class="text-end"><div class="fs-5 fw-semibold">{{ c.valor|brl }}</div>{% if c.vencida %}<div class="small text-danger">atualizado {{ c.atualizado|brl }}</div>{% endif %}</div>
+  </div>
+  {% if c.link_pagamento or c.pix_copia_cola %}<hr>
+  <div class="row g-3 align-items-center">
+    {% if c.qr %}<div class="col-sm-3 text-center">{{ c.qr }}</div>{% endif %}
+    <div class="col">
+      {% if c.link_pagamento %}<a href="{{ c.link_pagamento }}" target="_blank" class="btn btn-primary btn-sm mb-2"><i class="bi bi-upc"></i> Abrir boleto / fatura</a>{% endif %}
+      {% if c.pix_copia_cola %}<label class="small fw-semibold d-block">PIX copia e cola</label>
+        <textarea id="pix{{ c.pk }}" class="form-control form-control-sm" rows="3" readonly>{{ c.pix_copia_cola }}</textarea>
+        <button class="btn btn-sm btn-outline-secondary mt-1" onclick="copiar('pix{{ c.pk }}',this)"><i class="bi bi-clipboard"></i> Copiar código PIX</button>{% endif %}
+    </div></div>
+  {% else %}<div class="small text-muted mt-2">O boleto/PIX ainda não foi emitido. Em caso de dúvida, fale com o escritório.</div>{% endif %}
+</div></div>
+{% empty %}<div class="alert alert-success"><i class="bi bi-check-circle"></i> Nenhum honorário em aberto. Obrigado!</div>{% endfor %}
+{% if pagas %}<h6 class="mt-4">Pagos</h6>
+<div class="card shadow-sm"><ul class="list-group list-group-flush small">{% for c in pagas %}
+  <li class="list-group-item d-flex justify-content-between align-items-center"><span>{{ c.descricao }}<br><span class="text-muted">pago em {{ c.data_pagamento|date:"d/m/Y" }} · {{ c.valor_pago|brl }}</span></span>
+    <a href="{% url 'portal_recibo' c.pk %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-printer"></i> Recibo</a></li>{% endfor %}</ul></div>{% endif %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Documentos do portal{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Documentos do portal</h4>
+  <div class="d-flex gap-2">
+    <a href="{% url 'acessos' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-person-badge"></i> Acessos dos clientes</a>
+    <a href="{% url 'documentos_publicar' %}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload"></i> Publicar para cliente</a>
+  </div>
+</div>
+<ul class="nav nav-tabs">
+  <li class="nav-item"><a class="nav-link {% if aba == 'recebidos' %}active{% endif %}" href="?aba=recebidos">Recebidos dos clientes {% if qtd_pendentes %}<span class="badge bg-danger">{{ qtd_pendentes }}</span>{% endif %}</a></li>
+  <li class="nav-item"><a class="nav-link {% if aba == 'enviados' %}active{% endif %}" href="?aba=enviados">Publicados para clientes {% if qtd_nao_vistos %}<span class="badge bg-secondary" title="ainda não baixados">{{ qtd_nao_vistos }}</span>{% endif %}</a></li>
+</ul>
+<div class="card shadow-sm border-top-0 rounded-top-0"><div class="card-body pb-0">
+<form class="row g-2 mb-3">
+  <input type="hidden" name="aba" value="{{ aba }}">
+  <div class="col-md-4"><select name="cliente" class="form-select form-select-sm"><option value="">Todos os clientes</option>{% for c in clientes %}<option value="{{ c.pk }}" {% if filtros.cliente == c.pk|stringformat:'s' %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><select name="categoria" class="form-select form-select-sm"><option value="">Todas as categorias</option>{% for v, n in categorias %}<option value="{{ v }}" {% if filtros.categoria == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+  <div class="col-md-3">{% if aba == 'recebidos' %}<select name="pendentes" class="form-select form-select-sm"><option value="1">Só não processados</option><option value="0" {% if filtros.pendentes == '0' %}selected{% endif %}>Todos</option></select>
+    {% else %}<select name="nao_vistos" class="form-select form-select-sm"><option value="">Todos</option><option value="1" {% if filtros.nao_vistos == '1' %}selected{% endif %}>Ainda não baixados</option></select>{% endif %}</div>
+  <div class="col-md-2"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-funnel"></i> Filtrar</button></div>
+</form></div>
+<div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+  <thead class="table-light"><tr><th>Data</th><th>Cliente</th><th>Documento</th><th>Categoria</th><th>Comp.</th><th>{% if aba == 'recebidos' %}Enviado por{% else %}Baixado pelo cliente{% endif %}</th><th class="text-end"></th></tr></thead>
+  <tbody>{% for a in arquivos %}<tr class="{% if aba == 'recebidos' and a.processado_em %}text-muted{% endif %}">
+    <td class="text-nowrap small">{{ a.enviado_em|date:"d/m/Y H:i" }}</td>
+    <td><a href="{% url 'cliente_detalhe' a.cliente.pk %}" class="text-decoration-none">{{ a.cliente }}</a></td>
+    <td><a href="{% url 'documento_baixar' a.pk %}"><i class="bi bi-file-earmark"></i> {{ a.titulo }}</a> <small class="text-muted">{{ a.extensao }} · {{ a.tamanho_legivel }}</small>
+      {% if a.observacao %}<br><small class="text-muted">{{ a.observacao|truncatechars:90 }}</small>{% endif %}
+      {% if a.protocolo %}<br><a href="{% url 'protocolo_detalhe' a.protocolo.pk %}" class="small text-muted">protocolo {{ a.protocolo.codigo }}</a>{% endif %}</td>
+    <td class="small">{{ a.get_categoria_display }}</td><td class="small">{{ a.competencia|date:"m/Y" }}</td>
+    {% if aba == 'recebidos' %}
+      <td class="small">{{ a.enviado_por.first_name|default:a.enviado_por.username }}{% if a.processado_em %}<br><span class="text-success"><i class="bi bi-check2"></i> processado por {{ a.processado_por }}</span>{% endif %}</td>
+      <td class="text-end"><form method="post" action="{% url 'documento_processar' a.pk %}">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}">
+        {% if a.processado_em %}<button class="btn btn-sm btn-link text-muted" title="Voltar para pendente"><i class="bi bi-arrow-counterclockwise"></i></button>{% else %}<button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Processado</button>{% endif %}</form></td>
+    {% else %}
+      <td class="small">{% if a.visualizado_em %}<span class="text-success"><i class="bi bi-eye"></i> {{ a.visualizado_em|date:"d/m/Y H:i" }}</span>{% else %}<span class="text-muted">ainda não</span>{% endif %}
+        {% if a.vencimento %}<br>vence {{ a.vencimento|date:"d/m/Y" }}{% endif %}</td>
+      <td class="text-end">{% if not a.visualizado_em %}<form method="post" action="{% url 'documento_excluir' a.pk %}" onsubmit="return confirm('Remover do portal?')">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-link text-danger"><i class="bi bi-trash"></i></button></form>{% endif %}</td>
+    {% endif %}
+  </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nada por aqui.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

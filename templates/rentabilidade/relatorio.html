@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Rentabilidade{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Rentabilidade por cliente</h4>
+  <div class="d-flex gap-2"><a href="{% url 'horas' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-stopwatch"></i> Lançar horas</a>
+  {% if user.is_staff %}<a href="{% url 'equipe_custos' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people"></i> Custo da hora da equipe</a>{% endif %}</div>
+</div>
+{% if faltam_custos %}<div class="alert alert-warning small"><i class="bi bi-exclamation-triangle"></i> Sem custo da hora cadastrado para: {% for u in faltam_custos %}<b>{{ u.get_full_name|default:u.username }}</b>{% if not forloop.last %}, {% endif %}{% endfor %}. As horas dessas pessoas entram com custo zero. <a href="{% url 'equipe_custos' %}">Cadastrar</a></div>{% endif %}
+<form class="row g-2 mb-3 align-items-end">
+  <div class="col-auto"><label class="form-label small">De</label><input type="month" name="de" value="{{ de|date:'Y-m' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até</label><input type="month" name="ate" value="{{ ate|date:'Y-m' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Ver</button></div>
+</form>
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Honorários no período</div><div class="valor">{{ totais.receita|brl }}</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Custo das horas ({{ totais.horas }})</div><div class="valor">{{ totais.custo|brl }}</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Margem</div><div class="valor {% if totais.margem < 0 %}text-danger{% else %}text-success{% endif %}">{{ totais.margem|brl }}</div><small>{% if totais.perc is not None %}{{ totais.perc|floatformat:1 }}%{% endif %}</small></div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Horas internas (sem cliente)</div><div class="valor">{{ totais.interno_horas }}</div><small class="text-muted">{{ totais.interno_custo|brl }}</small></div></div></div>
+</div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+  <thead class="table-light"><tr><th>Cliente</th><th class="text-end">Honorários</th><th class="text-end">Horas</th><th class="text-end">Custo</th><th class="text-end">Margem</th><th class="text-end">%</th><th class="text-end">R$/hora</th><th class="text-end">Honorário mensal sugerido</th></tr></thead>
+  <tbody>{% for l in linhas %}<tr class="{% if l.perc is None or l.perc < 0 %}table-danger{% elif l.perc < config.margem_alvo_percentual %}table-warning{% endif %}" onclick="location='{% url 'rentabilidade_cliente' l.cliente.pk %}?de={{ de|date:'Y-m' }}&ate={{ ate|date:'Y-m' }}'" style="cursor:pointer">
+    <td class="fw-semibold">{{ l.cliente }} <small class="text-muted fw-normal">{{ l.cliente.get_regime_display }}</small></td>
+    <td class="text-end">{{ l.receita|brl }}</td><td class="text-end">{{ l.horas }}</td><td class="text-end">{{ l.custo|brl }}</td>
+    <td class="text-end">{{ l.margem|brl }}</td><td class="text-end">{% if l.perc is not None %}{{ l.perc|floatformat:0 }}%{% else %}—{% endif %}</td>
+    <td class="text-end">{% if l.por_hora %}{{ l.por_hora|brl }}{% else %}—{% endif %}</td>
+    <td class="text-end">{% if l.sugerido %}<b>{{ l.sugerido|brl }}</b> <small class="text-muted">(hoje {{ l.mensal_atual|brl }})</small>{% else %}<span class="text-success small">ok</span>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma hora lançada para clientes no período.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<p class="small text-muted mt-2">Vermelho: dá prejuízo. Amarelo: abaixo da margem desejada ({{ config.margem_alvo_percentual|floatformat:0 }}%). O honorário sugerido cobre o custo das horas com a margem desejada. Receita = honorários por competência (inclui em aberto).</p>
+{% if sem_horas %}<div class="small text-muted"><b>{{ sem_horas|length }} cliente(s) com honorário e nenhuma hora lançada no período:</b> {% for l in sem_horas|slice:":40" %}{{ l.cliente }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+{% endblock %}

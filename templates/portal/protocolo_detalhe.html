@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Protocolo {{ p.codigo }}{% endblock %}
+{% block head %}<style>@media print { .card { border: 0 !important; box-shadow: none !important; } .assinatura { margin-top: 70px; } }</style>{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 no-print">
+  <a href="{% url 'protocolos' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Protocolos</a>
+  <div class="d-flex flex-wrap gap-2">
+    {% if link_whats %}<a href="{{ link_whats }}" target="_blank" class="btn btn-success btn-sm"><i class="bi bi-whatsapp"></i> Avisar cliente</a>{% endif %}
+    <button onclick="print()" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer"></i> Imprimir</button>
+  </div>
+</div>
+<div class="card shadow-sm" style="max-width:860px"><div class="card-body p-4">
+  <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+    <div><h5 class="mb-0">{{ config.nome_escritorio }}</h5><small class="text-muted">{% if config.cnpj %}CNPJ {{ config.cnpj }} · {% endif %}{{ config.telefone }}</small></div>
+    <div class="text-end"><div class="fs-5 fw-semibold">PROTOCOLO Nº {{ p.codigo }}</div><div>{{ p.get_tipo_display }}</div></div>
+  </div>
+  <div class="row small mb-3">
+    <div class="col-sm-7"><b>Cliente:</b> {{ p.cliente.nome }}<br><b>CNPJ/CPF:</b> {{ p.cliente.documento_formatado }}</div>
+    <div class="col-sm-5"><b>Data:</b> {{ p.data|date:"d/m/Y H:i" }}<br><b>Meio:</b> {{ p.get_meio_display }}<br><b>Responsável:</b> {{ p.responsavel.get_full_name|default:p.responsavel.username|default:"—" }}</div>
+  </div>
+  <table class="table table-sm table-bordered">
+    <thead class="table-light"><tr><th style="width:40px">#</th><th>Documento</th><th style="width:110px">Competência</th><th style="width:60px">Qtd.</th></tr></thead>
+    <tbody>{% for i in itens %}<tr><td>{{ forloop.counter }}</td><td>{{ i.descricao }}{% if i.arquivo %} <a href="{% url 'documento_baixar' i.arquivo.pk %}" class="no-print small"><i class="bi bi-download"></i></a>{% if i.arquivo.visualizado_em %} <small class="text-success no-print">baixado {{ i.arquivo.visualizado_em|date:"d/m H:i" }}</small>{% endif %}{% endif %}</td><td>{{ i.competencia }}</td><td>{{ i.quantidade }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% if p.observacoes %}<p class="small"><b>Observações:</b> {{ p.observacoes|linebreaksbr }}</p>{% endif %}
+  {% if p.confirmado %}
+    <div class="alert alert-success small mb-0"><i class="bi bi-check-circle"></i> <b>Confirmado</b> em {{ p.confirmado_em|date:"d/m/Y H:i" }} — {{ p.get_confirmacao_forma_display }}
+      {% if p.confirmado_por %} por {{ p.confirmado_por.get_full_name|default:p.confirmado_por.username }}{% endif %}{% if p.contato_nome %} ({{ p.contato_nome }}){% endif %}{% if p.confirmado_ip %} · IP {{ p.confirmado_ip }}{% endif %}</div>
+  {% elif p.meio == 'PORTAL' and p.tipo == 'ENTREGA' %}
+    <div class="alert alert-warning small"><i class="bi bi-hourglass-split"></i> Aguardando o cliente baixar ou confirmar no portal. A ciência é registrada sozinha, com data, hora e IP.</div>
+    <form method="post" action="{% url 'protocolo_confirmar' p.pk %}" class="d-flex gap-2 no-print">{% csrf_token %}
+      <input name="contato_nome" class="form-control form-control-sm" placeholder="Quem confirmou (opcional)" style="max-width:280px">
+      <button class="btn btn-sm btn-outline-success">Cliente confirmou por outro meio</button>
+    </form>
+  {% else %}
+    <div class="row assinatura mt-5 text-center small">
+      <div class="col-6"><div class="border-top pt-1 mx-4">{% if p.tipo == 'ENTREGA' %}Recebido por (nome legível){% else %}Entregue por{% endif %}</div></div>
+      <div class="col-6"><div class="border-top pt-1 mx-4">Data e assinatura</div></div>
+    </div>
+    <form method="post" action="{% url 'protocolo_confirmar' p.pk %}" class="d-flex gap-2 mt-4 no-print">{% csrf_token %}
+      <input name="contato_nome" class="form-control form-control-sm" placeholder="Quem assinou (opcional)" value="{{ p.contato_nome }}" style="max-width:280px">
+      <button class="btn btn-sm btn-success"><i class="bi bi-pen"></i> Marcar como assinado/recebido</button>
+    </form>
+  {% endif %}
+</div></div>
+{% endblock %}
+{% block scripts %}{% if imprimir %}<script>window.onload = () => print();</script>{% endif %}{% endblock %}

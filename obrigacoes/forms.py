@@ -1,3 +1,4 @@
+from cobranca.equipe import equipe
 from django import forms
 from django.contrib.auth import get_user_model
 
@@ -8,7 +9,7 @@ from .models import Certificado, Entrega, Feriado, Obrigacao
 
 
 def _usuarios(campo):
-    campo.queryset = get_user_model().objects.filter(is_active=True)
+    campo.queryset = equipe()
     campo.label_from_instance = lambda u: u.get_full_name() or u.username
 
 

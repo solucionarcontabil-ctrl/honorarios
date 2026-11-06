@@ -1,14 +1,25 @@
 #!/bin/sh
-# Faz um backup completo agora e depois a cada 24h. Mantém os últimos 30 dias.
+# Backup completo agora e depois a cada 24h: banco (inclui XMLs) + arquivos do portal.
+# Mantém os últimos 30 dias.
 while true; do
-  arquivo="/backups/honorarios-$(date +%Y-%m-%d_%H%M).sql.gz"
+  data="$(date +%Y-%m-%d_%H%M)"
+  arquivo="/backups/honorarios-$data.sql.gz"
   if pg_dump -h db -U honorarios honorarios | gzip > "$arquivo.tmp"; then
     mv "$arquivo.tmp" "$arquivo"
-    echo "Backup OK: $arquivo"
+    echo "Backup do banco OK: $arquivo"
   else
     rm -f "$arquivo.tmp"
-    echo "ERRO no backup $(date)"
+    echo "ERRO no backup do banco $(date)"
   fi
-  find /backups -name 'honorarios-*.sql.gz' -mtime +30 -delete
+  if [ -d /media ] && [ -n "$(ls -A /media 2>/dev/null)" ]; then
+    if tar -czf "/backups/arquivos-$data.tar.gz.tmp" -C /media .; then
+      mv "/backups/arquivos-$data.tar.gz.tmp" "/backups/arquivos-$data.tar.gz"
+      echo "Backup dos arquivos OK"
+    else
+      rm -f "/backups/arquivos-$data.tar.gz.tmp"
+      echo "ERRO no backup dos arquivos $(date)"
+    fi
+  fi
+  find /backups \( -name 'honorarios-*.sql.gz' -o -name 'arquivos-*.tar.gz' \) -mtime +30 -delete
   sleep 86400
 done

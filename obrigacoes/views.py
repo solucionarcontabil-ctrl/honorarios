@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from cobranca.equipe import equipe
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -31,7 +32,7 @@ def _seguro(url, padrao):
 
 
 def _usuarios():
-    return get_user_model().objects.filter(is_active=True)
+    return equipe()
 
 
 # ------------------------------------------------------------------ painel de obrigações
@@ -85,12 +86,30 @@ def entregas(request):
     })
 
 
+ATIVIDADE_POR_ORGAO = {"MTE": "FOLHA", "CAIXA": "FOLHA", "SEFAZ": "FISCAL", "PREFEITURA": "FISCAL"}
+
+
+def _lancar_tempo(request, entrega):
+    """Se informou o tempo gasto ao concluir, lança no apontamento de horas (rentabilidade)."""
+    from rentabilidade.models import Apontamento
+    from rentabilidade.services import parse_tempo
+    minutos = parse_tempo(request.POST.get("tempo"))
+    if not minutos:
+        return
+    ob = entrega.obrigacao
+    atividade = "FOLHA" if ob and ob.sigla in ("FOLHA", "ESOCIAL", "FGTS") else (
+        ATIVIDADE_POR_ORGAO.get(ob.orgao, "CONTABIL" if ob.sigla in ("ECD", "BALANCO") else "FISCAL") if ob else "OUTROS")
+    Apontamento.objects.create(usuario=request.user, cliente=entrega.cliente, minutos=minutos, atividade=atividade,
+                               descricao=entrega.titulo, entrega=entrega)
+
+
 @login_required
 @require_POST
 def entrega_acao(request, pk, acao):
     e = get_object_or_404(Entrega, pk=pk)
     if acao == "entregar":
         e.concluir(request.user, Entrega.ENTREGUE, request.POST.get("protocolo", "").strip())
+        _lancar_tempo(request, e)
     elif acao == "dispensar":
         e.concluir(request.user, Entrega.DISPENSADA)
     elif acao == "andamento":

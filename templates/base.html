@@ -39,6 +39,17 @@
           </ul>
         </li>
         <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-globe2"></i> Portal</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'documentos' %}"><i class="bi bi-inbox"></i> Documentos recebidos/enviados</a></li>
+            <li><a class="dropdown-item" href="{% url 'documentos_publicar' %}"><i class="bi bi-cloud-upload"></i> Publicar para cliente</a></li>
+            <li><a class="dropdown-item" href="{% url 'protocolos' %}"><i class="bi bi-journal-check"></i> Protocolos</a></li>
+            <li><a class="dropdown-item" href="{% url 'protocolo_novo' %}"><i class="bi bi-plus-lg"></i> Novo protocolo (papel)</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'acessos' %}"><i class="bi bi-person-badge"></i> Acessos dos clientes</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-briefcase"></i> Escritório</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{% url 'obrig_entregas' %}"><i class="bi bi-calendar-check"></i> Obrigações e tarefas</a></li>
@@ -47,18 +58,23 @@
             <li><a class="dropdown-item" href="{% url 'certificados' %}"><i class="bi bi-shield-lock"></i> Certificados digitais</a></li>
             <li><a class="dropdown-item" href="{% url 'xml_central' %}"><i class="bi bi-filetype-xml"></i> Central de XMLs</a></li>
             <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'horas' %}"><i class="bi bi-stopwatch"></i> Minhas horas</a></li>
+            <li><a class="dropdown-item" href="{% url 'rentabilidade' %}"><i class="bi bi-graph-up"></i> Rentabilidade por cliente</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'obrig_catalogo' %}"><i class="bi bi-list-check"></i> Catálogo de obrigações e feriados</a></li>
             <li><a class="dropdown-item" href="{% url 'importar_clientes' %}"><i class="bi bi-file-earmark-spreadsheet"></i> Importar clientes (planilha)</a></li>
           </ul>
         </li>
       </ul>
       <ul class="navbar-nav">
+        {% if cronometro %}<li class="nav-item"><a class="nav-link text-warning" href="{% url 'horas' %}" title="Cronômetro rodando"><i class="bi bi-record-circle"></i> {{ cronometro.cliente|default:"Escritório"|truncatechars:18 }} · {{ cronometro.horas_texto }}</a></li>{% endif %}
         {% if user.is_staff %}<li class="nav-item"><a class="nav-link" href="{% url 'configuracao' %}"><i class="bi bi-gear"></i></a></li>{% endif %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}</a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="{% url 'trocar_senha' %}">Trocar senha</a></li>
-            {% if user.is_staff %}<li><a class="dropdown-item" href="/admin/">Administração avançada</a></li>{% endif %}
+            {% if user.is_staff %}<li><a class="dropdown-item" href="{% url 'equipe_custos' %}">Custo da hora da equipe</a></li>
+            <li><a class="dropdown-item" href="/admin/">Administração avançada</a></li>{% endif %}
             <li><hr class="dropdown-divider"></li>
             <li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="dropdown-item">Sair</button></form></li>
           </ul>

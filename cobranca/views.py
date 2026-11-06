@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from cobranca.equipe import equipe
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -83,11 +84,13 @@ def _resumo_escritorio(usuario, hoje):
     from datetime import timedelta
 
     from obrigacoes.models import Certificado, Entrega
+    from portal.models import Arquivo
     abertas = Entrega.objects.filter(status__in=[Entrega.PENDENTE, Entrega.ANDAMENTO])
     return {
         "obrig_atrasadas": abertas.filter(prazo__lt=hoje).count(),
         "obrig_minhas_semana": abertas.filter(responsavel=usuario, prazo__gte=hoje, prazo__lte=hoje + timedelta(days=7))
         .select_related("cliente").order_by("prazo")[:8],
+        "docs_recebidos": Arquivo.objects.filter(direcao=Arquivo.RECEBIDO, processado_em__isnull=True).count(),
         "certs_vencendo": Certificado.objects.filter(ativo=True, validade_fim__lte=hoje + timedelta(days=30))
         .select_related("cliente").order_by("validade_fim")[:8],
     }
@@ -116,7 +119,7 @@ def clientes_lista(request):
         qs = qs.filter(responsavel_id=request.GET["responsavel"])
     return render(request, "cobranca/clientes_lista.html", {
         "clientes": qs, "q": q, "situacao": situacao,
-        "usuarios": get_user_model().objects.filter(is_active=True),
+        "usuarios": equipe(),
     })
 
 
@@ -215,7 +218,7 @@ def cobrancas_lista(request):
         "total": qs.aggregate(s=Sum("valor"))["s"] or 0,
         "qtd": qs.count(),
         "situacao": situacao,
-        "usuarios": get_user_model().objects.filter(is_active=True),
+        "usuarios": equipe(),
         "filtros": request.GET,
         "query": request.GET.urlencode(),
     })
@@ -408,7 +411,7 @@ def inadimplencia(request):
         "linhas": linhas, "faixas": faixas,
         "total": sum((l["total"] for l in linhas), Decimal(0)),
         "total_atualizado": sum((l["atualizado"] for l in linhas), Decimal(0)),
-        "usuarios": get_user_model().objects.filter(is_active=True),
+        "usuarios": equipe(),
     })
 
 

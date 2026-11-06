@@ -72,4 +72,29 @@ class Command(BaseCommand):
         from xmls.services import importar as importar_xml
         pasta = Path(__file__).resolve().parents[3] / "xmls" / "exemplos"
         importar_xml([(p.name, p.read_bytes()) for p in sorted(pasta.glob("*.xml"))], admin)
+        # portal, protocolos e rentabilidade
+        from django.core.files.base import ContentFile
+
+        from portal import services as portal
+        from rentabilidade.models import Apontamento, Membro
+        padaria = Cliente.objects.get(documento="11222333000181")
+        acesso, _ = portal.criar_acesso("Maria (Padaria)", "padaria", [padaria, Cliente.objects.get(documento="60701190000104")], admin)
+        acesso.usuario.set_password("demo-cliente-123")
+        acesso.usuario.save()
+        pdf = lambda nome: ContentFile(b"%PDF-1.4 exemplo", name=nome)  # noqa: E731
+        portal.publicar(padaria, [pdf("DAS-10-2026.pdf")], admin, "GUIA", "DAS 10/2026", mes_ant,
+                        hoje.replace(day=20), Decimal("312.40"), "Guia do Simples Nacional.")
+        portal.publicar(padaria, [pdf("holerites-10-2026.pdf"), pdf("folha-resumo-10-2026.pdf")], admin, "FOLHA",
+                        "Folha 10/2026", mes_ant)
+        portal.receber(padaria, [pdf("extrato-itau-outubro.pdf")], acesso.usuario, "EXTRATO", mes_ant, "Extrato da conta principal")
+        Membro.objects.update_or_create(usuario=admin, defaults={"custo_hora": Decimal("75")})
+        Membro.objects.update_or_create(usuario=pai, defaults={"custo_hora": Decimal("90")})
+        horas = [("11222333000181", admin, 240, "FISCAL"), ("11222333000181", pai, 300, "FOLHA"),
+                 ("45723174000110", admin, 360, "CONTABIL"), ("45723174000110", pai, 180, "FISCAL"),
+                 ("60701190000104", admin, 420, "FISCAL"), ("60701190000104", pai, 360, "FOLHA"),
+                 ("11444777000161", pai, 300, "CONTABIL"), ("33000167000101", admin, 45, "FISCAL"),
+                 ("52998224725", admin, 60, "IRPF")]
+        for doc, u, minutos, ativ in horas:
+            Apontamento.objects.create(usuario=u, cliente=Cliente.objects.get(documento=doc), data=mes_ant.replace(day=10),
+                                       minutos=minutos, atividade=ativ, descricao="Rotina do mês")
         self.stdout.write(self.style.SUCCESS("Dados de exemplo criados."))

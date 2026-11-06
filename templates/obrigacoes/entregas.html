@@ -67,7 +67,8 @@
         {% if e.aberta %}
         <form method="post" action="{% url 'entrega_acao' e.pk 'entregar' %}" class="d-inline-flex gap-1">{% csrf_token %}
           <input type="hidden" name="proximo" value="{{ request.get_full_path }}">
-          <input name="protocolo" class="form-control form-control-sm d-none d-xl-block" placeholder="nº recibo (opcional)" style="width:150px">
+          <input name="protocolo" class="form-control form-control-sm d-none d-xl-block" placeholder="nº recibo (opcional)" style="width:140px">
+          <input name="tempo" class="form-control form-control-sm d-none d-xl-block" placeholder="tempo" title="Tempo gasto (ex.: 0:40). Vai para a rentabilidade." style="width:70px">
           <button class="btn btn-sm btn-success" title="Marcar como entregue"><i class="bi bi-check-lg"></i></button></form>
         <form method="post" action="{% url 'entrega_acao' e.pk 'dispensar' %}" class="d-inline">{% csrf_token %}<input type="hidden" name="proximo" value="{{ request.get_full_path }}">
           <button class="btn btn-sm btn-outline-secondary" title="Dispensada / sem movimento"><i class="bi bi-slash-circle"></i></button></form>

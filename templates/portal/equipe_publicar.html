@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titulo %}Publicar documentos{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Publicar documentos no portal do cliente</h4>
+  <a href="{% url 'documentos' %}?aba=enviados" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+</div>
+<div class="card shadow-sm"><div class="card-body">
+<form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-md-6"><label class="form-label small fw-semibold">Cliente</label>{{ form.cliente }}{% for e in form.cliente.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-md-6"><label class="form-label small fw-semibold">Categoria</label>{{ form.categoria }}</div>
+    <div class="col-12"><label class="form-label small fw-semibold">Arquivos</label>
+      <input type="file" name="arquivos" multiple class="form-control" required>
+      <div class="form-text">PDF, XML, ZIP, imagens, planilhas e documentos de texto, até 25 MB cada. Vários arquivos geram um protocolo só.</div></div>
+    <div class="col-md-6"><label class="form-label small fw-semibold">Título</label>{{ form.titulo }}<div class="form-text">{{ form.titulo.help_text }}</div></div>
+    <div class="col-md-2"><label class="form-label small fw-semibold">Competência</label>{{ form.competencia }}</div>
+    <div class="col-md-2"><label class="form-label small fw-semibold">Vencimento</label>{{ form.vencimento }}</div>
+    <div class="col-md-2"><label class="form-label small fw-semibold">Valor (R$)</label>{{ form.valor }}</div>
+    <div class="col-12"><label class="form-label small fw-semibold">Mensagem ao cliente</label>{{ form.observacao }}</div>
+  </div>
+  <button class="btn btn-primary mt-4"><i class="bi bi-cloud-upload"></i> Publicar</button>
+</form></div></div>
+{% endblock %}

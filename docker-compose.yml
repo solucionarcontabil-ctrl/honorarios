@@ -21,6 +21,8 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgres://honorarios:${DB_PASSWORD}@db:5432/honorarios
+    volumes:
+      - media:/app/media   # arquivos do portal do cliente
     depends_on:
       db: { condition: service_healthy }
 
@@ -36,7 +38,7 @@ services:
       - caddydata:/data
     depends_on: [web]
 
-  # Backup diário do banco (guarda 30 dias em ./backups)
+  # Backup diário do banco e dos arquivos do portal (guarda 30 dias em ./backups)
   backup:
     image: postgres:17
     restart: always
@@ -46,6 +48,7 @@ services:
     volumes:
       - ./backups:/backups
       - ./scripts/backup.sh:/backup.sh:ro
+      - media:/media:ro
     entrypoint: ["sh", "/backup.sh"]
     depends_on:
       db: { condition: service_healthy }
@@ -61,5 +64,6 @@ services:
     depends_on: [web]
 
 volumes:
+  media:
   dbdata:
   caddydata:

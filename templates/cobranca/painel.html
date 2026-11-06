@@ -13,6 +13,12 @@
   <a href="{% url 'reajustes' %}" class="btn btn-sm btn-info">Ver reajustes</a>
 </div>
 {% endif %}
+{% if docs_recebidos %}
+<div class="alert alert-primary d-flex justify-content-between align-items-center">
+  <span><i class="bi bi-inbox"></i> <b>{{ docs_recebidos }}</b> documento(s) enviado(s) por clientes pelo portal aguardando processamento.</span>
+  <a href="{% url 'documentos' %}" class="btn btn-sm btn-primary">Ver</a>
+</div>
+{% endif %}
 {% if obrig_atrasadas %}
 <div class="alert alert-danger d-flex justify-content-between align-items-center">
   <span><i class="bi bi-calendar-x"></i> <b>{{ obrig_atrasadas }}</b> obrigação(ões)/tarefa(s) atrasada(s).</span>

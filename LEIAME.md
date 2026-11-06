@@ -41,6 +41,33 @@ dos clientes: cadastro, geração mensal, boleto/PIX, baixa, inadimplência e re
 Os XMLs ficam guardados compactados **dentro do banco**, então entram no backup diário.
 A captura automática na SEFAZ e no Portal Nacional da NFS-e vem depois, quando houver certificado.
 
+### Módulo 4 — Portal do cliente
+
+| Quem | O que faz |
+|---|---|
+| **Cliente** (no celular ou computador) | Baixa guias, holerites, balanços e outros documentos; vê as guias a vencer; **envia** extratos, notas, fotos e planilhas (XMLs de notas vão direto para a Central de XMLs); vê os honorários em aberto com boleto/PIX e baixa os recibos dos pagos; confirma o recebimento dos protocolos; troca a própria senha. Quem é sócio de mais de uma empresa troca de empresa no menu |
+| **Equipe** | **Portal → Publicar para cliente** (vários arquivos de uma vez); caixa de **documentos recebidos** com "processado"; **Acessos dos clientes**: cria login, gera senha provisória e manda pelo WhatsApp, desativa e vê a atividade (login, download, envio, com IP) |
+
+Segurança: o login de cliente **só enxerga o /portal/ da própria empresa**. Não abre nenhuma tela interna, não vê outros clientes
+e não baixa arquivos de outra empresa. Os arquivos não ficam públicos na internet: só saem por download com permissão.
+Tipos aceitos: PDF, XML, ZIP, imagens, planilhas, Word, TXT, OFX, até 25 MB cada.
+
+### Módulo 5 — Protocolos de entrega e recebimento
+
+- Numeração sequencial por ano (2026/00001…), com itens, competência e quantidade.
+- **Automático pelo portal:** publicar documentos gera um protocolo de entrega. Quando o cliente **baixa** ou clica em
+  "confirmo o recebimento", a ciência fica registrada com data, hora, usuário e IP. Documentos enviados pelo cliente
+  geram um protocolo de recebimento.
+- **Manual (papel):** para entrega pessoal ou por motoboy, você cria o protocolo, imprime com as linhas de assinatura e depois marca como assinado.
+
+### Módulo 6 — Horas e rentabilidade por cliente
+
+- **Apontamento de horas:** cronômetro (iniciar/parar, que fica visível no topo enquanto roda) ou lançamento manual (`1:30`, `1h30`, `90`, `1,5h`).
+  Ao marcar uma obrigação como entregue, dá para informar o tempo gasto e ele é lançado sozinho.
+- **Custo da hora** de cada pessoa (menu do usuário → Custo da hora da equipe), com explicação de como calcular.
+- **Relatório por período:** honorários × custo das horas por cliente, margem em R$ e %, R$ por hora, e **honorário mensal sugerido**
+  para atingir a margem desejada. Vermelho = prejuízo, amarelo = abaixo da meta. Detalhe por atividade e por pessoa.
+
 Tudo registra **quem fez** (você ou seu pai): quem criou, quem deu baixa e quem reajustou.
 
 ---
@@ -99,7 +126,9 @@ taxa, use só o **PIX na sua chave**: o sistema gera o QR Code e o copia-e-cola 
   ```
   0 3 * * * rclone copy /root/honorarios/backups gdrive:backup-honorarios
   ```
-- Para restaurar: `sh scripts/restaurar.sh backups/honorarios-AAAA-MM-DD_HHMM.sql.gz`
+- Os **arquivos do portal** também entram no backup diário (`backups/arquivos-AAAA-MM-DD_HHMM.tar.gz`).
+- Para restaurar o banco: `sh scripts/restaurar.sh backups/honorarios-AAAA-MM-DD_HHMM.sql.gz`
+- Para restaurar os arquivos: `sh scripts/restaurar_arquivos.sh backups/arquivos-AAAA-MM-DD_HHMM.tar.gz`
 
 ## Atualizar para uma nova versão
 ```bash

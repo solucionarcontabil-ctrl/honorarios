@@ -5,6 +5,17 @@
   <div><h4 class="mb-0">{{ cliente }} {% if not cliente.ativo %}<span class="badge bg-secondary">Inativo</span>{% endif %}</h4>
     <div class="text-muted">{{ cliente.nome }} · {{ cliente.documento_formatado }} · {{ cliente.get_regime_display }}{% if cliente.tem_funcionarios %} · com funcionários{% endif %}{% if cliente.inscricao_estadual %} · IE {{ cliente.inscricao_estadual }}{% endif %}{% if cliente.inscricao_municipal %} · IM {{ cliente.inscricao_municipal }}{% endif %}</div></div>
   <div class="d-flex gap-2">
+    <div class="dropdown">
+      <button class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-globe2"></i> Portal</button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% url 'documentos_publicar' %}?cliente={{ cliente.pk }}">Publicar documento</a></li>
+        <li><a class="dropdown-item" href="{% url 'documentos' %}?cliente={{ cliente.pk }}">Documentos recebidos</a></li>
+        <li><a class="dropdown-item" href="{% url 'protocolo_novo' %}?cliente={{ cliente.pk }}">Novo protocolo</a></li>
+        <li><a class="dropdown-item" href="{% url 'protocolos' %}?cliente={{ cliente.pk }}">Protocolos do cliente</a></li>
+        <li><a class="dropdown-item" href="{% url 'acesso_novo' %}?cliente={{ cliente.pk }}">Criar acesso ao portal</a></li>
+      </ul>
+    </div>
+    <a href="{% url 'rentabilidade_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Rentabilidade</a>
     <a href="{% url 'xml_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-filetype-xml"></i> Notas fiscais</a>
     <a href="{% url 'xml_faturamento' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-bar-chart"></i> Faturamento</a>
     <a href="{% url 'cobranca_nova' %}?cliente={{ cliente.pk }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus"></i> Cobrança avulsa</a>
