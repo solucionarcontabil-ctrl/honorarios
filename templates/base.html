@@ -1,0 +1,65 @@
+{% load static moeda %}<!doctype html>
+<html lang="pt-br" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Honorários{% endblock %} · {{ escritorio.nome_escritorio|default:"Honorários" }}</title>
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  <style>
+    body { background: #f4f6f9; }
+    .navbar-brand { font-weight: 600; }
+    .card-kpi .valor { font-size: 1.5rem; font-weight: 600; white-space: nowrap; }
+    @media (max-width: 576px) { .card-kpi .valor { font-size: 1.1rem; } .card-kpi .card-body { padding: .75rem; } }
+    .table td, .table th { vertical-align: middle; }
+    .badge-ABERTA { background: #0d6efd; } .badge-PAGA { background: #198754; }
+    .badge-VENCIDA { background: #dc3545; } .badge-CANCELADA { background: #6c757d; }
+    .barra { height: 8px; border-radius: 4px; }
+    @media print { .no-print { display: none !important; } body { background: #fff; } }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark no-print">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'painel' %}"><i class="bi bi-calculator"></i> {{ escritorio.nome_escritorio }}</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="{% url 'painel' %}"><i class="bi bi-speedometer2"></i> Painel</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'clientes' %}"><i class="bi bi-people"></i> Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'cobrancas' %}"><i class="bi bi-receipt"></i> Cobranças</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'gerar' %}"><i class="bi bi-lightning"></i> Gerar mês</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'inadimplencia' %}"><i class="bi bi-exclamation-triangle"></i> Inadimplência</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'reajustes' %}"><i class="bi bi-graph-up-arrow"></i> Reajustes</a></li>
+      </ul>
+      <ul class="navbar-nav">
+        {% if user.is_staff %}<li class="nav-item"><a class="nav-link" href="{% url 'configuracao' %}"><i class="bi bi-gear"></i></a></li>{% endif %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'trocar_senha' %}">Trocar senha</a></li>
+            {% if user.is_staff %}<li><a class="dropdown-item" href="/admin/">Administração avançada</a></li>{% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="dropdown-item">Sair</button></form></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endif %}
+<main class="container-fluid py-3 px-3 px-lg-4">
+  {% for m in messages %}
+    <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show no-print">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}
+  {% block conteudo %}{% endblock %}
+</main>
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script>
+function copiar(id, btn){ const t=document.getElementById(id); navigator.clipboard.writeText(t.value||t.innerText); const o=btn.innerHTML; btn.innerHTML='<i class="bi bi-check2"></i> Copiado'; setTimeout(()=>btn.innerHTML=o,1500); }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

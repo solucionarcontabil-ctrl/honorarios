@@ -1,0 +1,85 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Cobrança {{ c.pk }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <div><h4 class="mb-0"><a href="{% url 'cliente_detalhe' c.cliente.pk %}" class="text-decoration-none">{{ c.cliente }}</a></h4>
+    <div class="text-muted">{{ c.descricao }}</div></div>
+  <span class="badge fs-6 badge-{{ c.situacao }}">{{ c.situacao_display }}</span>
+</div>
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <table class="table table-sm mb-0">
+        <tr><th>Competência</th><td>{{ c.competencia|mesano }} ({{ c.get_tipo_display }})</td></tr>
+        <tr><th>Vencimento</th><td>{{ c.vencimento|date:"d/m/Y" }}{% if c.vencida %} <span class="text-danger">— {{ c.dias_atraso }} dia{{ c.dias_atraso|pluralize }} de atraso</span>{% endif %}</td></tr>
+        <tr><th>Valor</th><td class="fs-5">{{ c.valor|brl }}</td></tr>
+        {% if encargos %}<tr><th>Multa + juros</th><td>{{ encargos|brl }} <small class="text-muted">({{ config.multa_percentual }}% + {{ config.juros_mensal_percentual }}% a.m.)</small></td></tr>
+        <tr><th>Valor atualizado</th><td class="fs-5 text-danger">{{ c.valor_atualizado|brl }}</td></tr>{% endif %}
+        {% if c.status == 'PAGA' %}<tr><th>Pago em</th><td>{{ c.data_pagamento|date:"d/m/Y" }} — {{ c.valor_pago|brl }} ({{ c.get_forma_recebimento_display|default:"—" }})</td></tr>
+        <tr><th>Baixado por</th><td>{{ c.baixado_por|default:"automático (Asaas)" }}</td></tr>{% endif %}
+        {% if c.criado_por %}<tr><th>Criado por</th><td>{{ c.criado_por }} em {{ c.criado_em|date:"d/m/Y H:i" }}</td></tr>{% endif %}
+        {% if c.gateway_id %}<tr><th>Asaas</th><td><code>{{ c.gateway_id }}</code></td></tr>{% endif %}
+      </table>
+      {% if c.observacoes %}<div class="small mt-2 text-muted">{{ c.observacoes|linebreaksbr }}</div>{% endif %}
+    </div></div>
+
+    {% if c.status == 'ABERTA' %}
+    <div class="card shadow-sm mb-3 border-success"><div class="card-header bg-success-subtle fw-semibold"><i class="bi bi-cash-coin"></i> Registrar pagamento (baixa)</div>
+      <div class="card-body"><form method="post" action="{% url 'cobranca_baixa' c.pk %}" class="row g-2">{% csrf_token %}
+        <div class="col-6"><label class="form-label small">Data</label>{{ baixa_form.data_pagamento }}</div>
+        <div class="col-6"><label class="form-label small">Valor pago</label>{{ baixa_form.valor_pago }}</div>
+        <div class="col-6"><label class="form-label small">Forma</label>{{ baixa_form.forma }}</div>
+        <div class="col-6"><label class="form-label small">Observação</label>{{ baixa_form.observacao }}</div>
+        <div class="col-12"><button class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Confirmar recebimento</button></div>
+      </form></div></div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-2">
+      {% if c.status == 'ABERTA' %}
+        <form method="post" action="{% url 'cobranca_acao' c.pk 'cancelar' %}" onsubmit="return confirm('Cancelar esta cobrança?')">{% csrf_token %}<button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> Cancelar</button></form>
+      {% else %}
+        <form method="post" action="{% url 'cobranca_acao' c.pk 'reabrir' %}" onsubmit="return confirm('Reabrir esta cobrança?')">{% csrf_token %}<button class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i> Reabrir</button></form>
+      {% endif %}
+      {% if c.status == 'PAGA' %}<a href="{% url 'cobranca_recibo' c.pk %}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer"></i> Recibo</a>{% endif %}
+      <a href="/admin/cobranca/cobranca/{{ c.pk }}/change/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    {% if c.status == 'ABERTA' %}
+    <div class="card shadow-sm mb-3"><div class="card-header bg-white fw-semibold"><i class="bi bi-upc-scan"></i> Boleto / PIX</div>
+      <div class="card-body">
+        {% if c.link_pagamento %}
+          <a href="{{ c.link_pagamento }}" target="_blank" class="btn btn-primary btn-sm"><i class="bi bi-box-arrow-up-right"></i> Abrir fatura / boleto</a>
+          {% if c.link_boleto and c.link_fatura %}<a href="{{ c.link_boleto }}" target="_blank" class="btn btn-outline-primary btn-sm">PDF do boleto</a>{% endif %}
+        {% endif %}
+        {% if not c.gateway_id %}
+          <div class="d-flex flex-wrap gap-2">
+          {% if asaas_ok %}<form method="post" action="{% url 'cobranca_acao' c.pk 'emitir' %}">{% csrf_token %}<button class="btn btn-primary btn-sm"><i class="bi bi-send"></i> Emitir boleto + PIX (Asaas)</button></form>
+          {% else %}<span class="small text-muted">Asaas não configurado — boleto registrado indisponível.</span>{% endif %}
+          {% if pix_proprio_ok %}<form method="post" action="{% url 'cobranca_acao' c.pk 'pix' %}">{% csrf_token %}<button class="btn btn-outline-success btn-sm"><i class="bi bi-qr-code"></i> Gerar PIX na minha chave</button></form>{% endif %}
+          </div>
+        {% endif %}
+        {% if c.pix_copia_cola %}
+          <div class="row mt-3 align-items-center">
+            <div class="col-sm-4 text-center">{{ qr }}</div>
+            <div class="col-sm-8"><label class="small fw-semibold">PIX copia e cola</label>
+              <textarea id="pix" class="form-control form-control-sm" rows="4" readonly>{{ c.pix_copia_cola }}</textarea>
+              <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="copiar('pix',this)"><i class="bi bi-clipboard"></i> Copiar</button></div>
+          </div>
+        {% endif %}
+      </div></div>
+    {% endif %}
+    <div class="card shadow-sm"><div class="card-header bg-white fw-semibold"><i class="bi bi-chat-dots"></i> Mensagem para o cliente</div>
+      <div class="card-body">
+        <textarea id="msg" class="form-control" rows="8">{{ mensagem }}</textarea>
+        <div class="d-flex gap-2 mt-2">
+          <a href="{{ whatsapp }}" target="_blank" class="btn btn-success btn-sm"><i class="bi bi-whatsapp"></i> Enviar no WhatsApp</a>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copiar('msg',this)"><i class="bi bi-clipboard"></i> Copiar</button>
+          {% if c.cliente.email %}<a class="btn btn-outline-primary btn-sm" href="mailto:{{ c.cliente.email }}?subject=Honorários {{ c.competencia|mesano }}&body={{ mensagem|urlencode }}"><i class="bi bi-envelope"></i> E-mail</a>{% endif %}
+        </div>
+        {% if not c.cliente.whatsapp %}<div class="form-text">Cliente sem WhatsApp cadastrado — o WhatsApp abrirá para você escolher o contato.</div>{% endif %}
+      </div></div>
+  </div>
+</div>
+{% endblock %}

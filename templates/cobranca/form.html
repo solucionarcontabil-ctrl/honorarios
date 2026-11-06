@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">{{ titulo }}</h4>
+  {% if voltar %}<a href="{{ voltar }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>{% endif %}
+</div>
+{% if extra %}
+<div class="alert alert-light border small">
+  <b>Asaas:</b> {{ extra.asaas }}<br>
+  <b>Endereço do webhook (cadastrar no Asaas):</b> <code>{{ extra.webhook }}</code>
+</div>
+{% endif %}
+<div class="card shadow-sm"><div class="card-body">
+<form method="post" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+  {% for campo in form %}
+    <div class="{% if campo.field.widget.input_type == 'checkbox' %}col-md-4 d-flex align-items-end{% elif campo.field.widget.attrs.rows %}col-12{% else %}col-md-4{% endif %}">
+      {% if campo.field.widget.input_type == 'checkbox' %}
+        <div class="form-check">{{ campo }} <label class="form-check-label" for="{{ campo.id_for_label }}">{{ campo.label|capfirst }}</label></div>
+      {% else %}
+        <label class="form-label small fw-semibold" for="{{ campo.id_for_label }}">{{ campo.label|capfirst }}</label>
+        {{ campo }}
+      {% endif %}
+      {% if campo.help_text %}<div class="form-text">{{ campo.help_text|safe }}</div>{% endif %}
+      {% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+  {% endfor %}
+  </div>
+  <div class="mt-4"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button></div>
+</form>
+</div></div>
+{% endblock %}

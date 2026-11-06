@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}{{ cliente }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <div><h4 class="mb-0">{{ cliente }} {% if not cliente.ativo %}<span class="badge bg-secondary">Inativo</span>{% endif %}</h4>
+    <div class="text-muted">{{ cliente.nome }} · {{ cliente.documento_formatado }} · {{ cliente.get_regime_display }}</div></div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'cobranca_nova' %}?cliente={{ cliente.pk }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus"></i> Cobrança avulsa</a>
+    <a href="{% url 'cliente_editar' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-3"><div class="card-body small">
+      <div><b>Contato:</b> {{ cliente.contato|default:"—" }}</div>
+      <div><b>E-mail:</b> {{ cliente.email|default:"—" }}</div>
+      <div><b>WhatsApp:</b> {% if cliente.whatsapp %}<a href="https://wa.me/{{ cliente.whatsapp_internacional }}" target="_blank">{{ cliente.whatsapp }}</a>{% else %}—{% endif %}</div>
+      <div><b>Responsável:</b> {{ cliente.responsavel_nome }}</div>
+      {% if cliente.endereco %}<div><b>Endereço:</b> {{ cliente.endereco }}, {{ cliente.numero }} – {{ cliente.bairro }} – {{ cliente.cidade }}/{{ cliente.uf }}</div>{% endif %}
+      {% if cliente.observacoes %}<hr><div class="text-pre">{{ cliente.observacoes|linebreaksbr }}</div>{% endif %}
+    </div></div>
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <div class="text-muted small">Em aberto</div><div class="fs-5 fw-semibold">{{ total_aberto|brl }}</div>
+      {% if total_atualizado %}<div class="text-danger small">Vencidas c/ multa e juros: {{ total_atualizado|brl }}</div>{% endif %}
+    </div></div>
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center"><b>Honorários</b>
+        <a href="{% url 'contrato_novo' cliente.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a></div>
+      <ul class="list-group list-group-flush">{% for ct in contratos %}
+        <li class="list-group-item {% if not ct.ativo %}text-muted{% endif %}">
+          <div class="d-flex justify-content-between"><b>{{ ct.descricao }}</b><a href="{% url 'contrato_editar' ct.pk %}"><i class="bi bi-pencil"></i></a></div>
+          <div class="fs-5">{{ ct.valor_mensal|brl }}</div>
+          <small class="text-muted">Vence dia {{ ct.dia_vencimento }} · {{ ct.get_forma_pagamento_display }}<br>
+          Reajuste: {{ ct.get_indice_reajuste_display }} em {{ ct.mes_reajuste|stringformat:"02d" }}{% if ct.ultimo_reajuste %} (último {{ ct.ultimo_reajuste|date:"m/Y" }}){% endif %}
+          {% if ct.cobra_13 %} · 13º em {{ ct.mes_13|stringformat:"02d" }}{% endif %}{% if not ct.ativo %} · <b>inativo</b>{% endif %}</small>
+        </li>{% empty %}<li class="list-group-item text-muted">Nenhum honorário cadastrado.</li>{% endfor %}
+      </ul></div>
+    {% if reajustes %}<div class="card shadow-sm mt-3"><div class="card-header bg-white"><b>Histórico de reajustes</b></div>
+      <ul class="list-group list-group-flush small">{% for r in reajustes %}
+        <li class="list-group-item">{{ r.data|date:"d/m/Y" }} · {{ r.indice }} {{ r.percentual|floatformat:2 }}% · {{ r.valor_anterior|brl }} → <b>{{ r.valor_novo|brl }}</b></li>{% endfor %}
+      </ul></div>{% endif %}
+  </div>
+  <div class="col-lg-8">
+    <div class="card shadow-sm"><div class="card-header bg-white"><b>Extrato de cobranças</b></div>
+    <div class="table-responsive"><table class="table table-sm table-hover mb-0">
+      <thead class="table-light"><tr><th>Comp.</th><th>Descrição</th><th>Vencimento</th><th class="text-end">Valor</th><th>Situação</th><th>Pago em</th></tr></thead>
+      <tbody>{% for c in cobrancas %}
+        <tr onclick="location='{% url 'cobranca_detalhe' c.pk %}'" style="cursor:pointer">
+          <td>{{ c.competencia|mesano }}</td><td>{{ c.descricao }}</td><td>{{ c.vencimento|date:"d/m/Y" }}</td>
+          <td class="text-end">{{ c.valor|brl }}</td><td><span class="badge badge-{{ c.situacao }}">{{ c.situacao_display }}</span></td>
+          <td>{{ c.data_pagamento|date:"d/m/Y" }}</td></tr>
+      {% empty %}<tr><td colspan="6" class="text-muted text-center py-3">Sem cobranças.</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+</div>
+{% endblock %}

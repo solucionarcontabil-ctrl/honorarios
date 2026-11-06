@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Gerar mensalidades{% endblock %}
+{% block conteudo %}
+<h4>Gerar mensalidades</h4>
+<form class="row g-2 mb-3 align-items-end">
+  <div class="col-auto"><label class="form-label small">Competência</label><input type="month" name="competencia" value="{{ competencia|date:'Y-m' }}" class="form-control"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Ver prévia</button></div>
+</form>
+<form method="post">{% csrf_token %}
+<input type="hidden" name="competencia" value="{{ competencia|date:'Y-m' }}">
+<div class="alert alert-light border">Serão criadas <b>{{ qtd_novo }}</b> cobrança(s), total <b>{{ total_novo|brl }}</b>. Desmarque quem não deve ser cobrado neste mês. Itens já gerados aparecem em cinza e não serão duplicados.</div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" checked onclick="document.querySelectorAll('.sel').forEach(e=>e.checked=this.checked)"></th><th>Cliente</th><th>Descrição</th><th>Vencimento</th><th class="text-end">Valor</th></tr></thead>
+  <tbody>{% for i in itens %}
+    <tr class="{% if i.ja_existe %}text-muted{% endif %}">
+      <td>{% if not i.ja_existe %}<input type="checkbox" class="form-check-input sel" name="contratos" value="{{ i.contrato.pk }}" checked>{% else %}<i class="bi bi-check2" title="já gerada"></i>{% endif %}</td>
+      <td>{{ i.contrato.cliente }}</td><td>{{ i.descricao }}{% if i.tipo == '13' %} <span class="badge bg-warning text-dark">13º</span>{% endif %}</td>
+      <td>{{ i.vencimento|date:"d/m/Y" }}</td><td class="text-end">{{ i.valor|brl }}</td>
+    </tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhum contrato ativo para esta competência.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% if qtd_novo %}<button class="btn btn-primary mt-3"><i class="bi bi-lightning"></i> Gerar cobranças</button>{% endif %}
+</form>
+{% endblock %}

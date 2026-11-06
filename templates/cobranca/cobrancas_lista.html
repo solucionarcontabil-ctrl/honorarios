@@ -1,0 +1,50 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Cobranças{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Cobranças</h4>
+  <div class="d-flex gap-2">
+    <a href="?{{ query }}&exportar=csv" class="btn btn-outline-secondary btn-sm"><i class="bi bi-filetype-csv"></i> Exportar (Excel)</a>
+    <a href="{% url 'cobranca_nova' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Avulsa</a>
+  </div>
+</div>
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item"><a class="nav-link {% if situacao == 'abertas' %}active{% endif %}" href="?situacao=abertas">Em aberto</a></li>
+  <li class="nav-item"><a class="nav-link {% if situacao == 'vencidas' %}active{% endif %}" href="?situacao=vencidas">Vencidas</a></li>
+  <li class="nav-item"><a class="nav-link {% if situacao == 'pagas' %}active{% endif %}" href="?situacao=pagas">Pagas</a></li>
+  <li class="nav-item"><a class="nav-link {% if situacao == 'canceladas' %}active{% endif %}" href="?situacao=canceladas">Canceladas</a></li>
+  <li class="nav-item"><a class="nav-link {% if situacao == 'todas' %}active{% endif %}" href="?situacao=todas">Todas</a></li>
+</ul>
+<form class="row g-2 mb-3">
+  <input type="hidden" name="situacao" value="{{ situacao }}">
+  <div class="col-md-3"><input name="q" value="{{ filtros.q }}" class="form-control form-control-sm" placeholder="Cliente ou descrição"></div>
+  <div class="col-md-2"><input type="month" name="competencia" value="{{ filtros.competencia }}" class="form-control form-control-sm" title="Competência"></div>
+  <div class="col-md-2"><input type="date" name="de" value="{{ filtros.de }}" class="form-control form-control-sm" title="Vencimento de"></div>
+  <div class="col-md-2"><input type="date" name="ate" value="{{ filtros.ate }}" class="form-control form-control-sm" title="Vencimento até"></div>
+  <div class="col-md-2"><select name="responsavel" class="form-select form-select-sm"><option value="">Responsável</option>
+    {% for u in usuarios %}<option value="{{ u.pk }}" {% if filtros.responsavel == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></div>
+  <div class="col-md-1"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-funnel"></i></button></div>
+</form>
+<form method="post" action="{% url 'cobrancas_emitir_lote' %}">{% csrf_token %}
+<input type="hidden" name="proximo" value="{{ request.get_full_path }}">
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+  <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" onclick="document.querySelectorAll('.sel').forEach(e=>e.checked=this.checked)"></th>
+    <th>Cliente</th><th>Comp.</th><th>Descrição</th><th>Vencimento</th><th class="text-end">Valor</th><th>Situação</th><th>Boleto/PIX</th></tr></thead>
+  <tbody>{% for c in cobrancas %}
+    <tr>
+      <td>{% if c.status == 'ABERTA' and not c.gateway_id %}<input type="checkbox" name="ids" value="{{ c.pk }}" class="form-check-input sel">{% endif %}</td>
+      <td><a href="{% url 'cobranca_detalhe' c.pk %}" class="fw-semibold text-decoration-none">{{ c.cliente }}</a></td>
+      <td>{{ c.competencia|mesano }}</td><td class="small">{{ c.descricao }}</td>
+      <td>{{ c.vencimento|date:"d/m/Y" }}{% if c.vencida %} <small class="text-danger">({{ c.dias_atraso }}d)</small>{% endif %}</td>
+      <td class="text-end">{{ c.valor|brl }}</td>
+      <td><span class="badge badge-{{ c.situacao }}">{{ c.situacao_display }}</span>{% if c.data_pagamento %} <small class="text-muted">{{ c.data_pagamento|date:"d/m" }}</small>{% endif %}</td>
+      <td>{% if c.link_pagamento %}<a href="{{ c.link_pagamento }}" target="_blank"><i class="bi bi-upc"></i></a>{% endif %}{% if c.pix_copia_cola %} <i class="bi bi-qr-code text-success"></i>{% endif %}</td>
+    </tr>{% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma cobrança.</td></tr>{% endfor %}
+  </tbody>
+  <tfoot class="table-light"><tr><td colspan="5"><b>{{ qtd }} cobrança{{ qtd|pluralize }}</b>{% if qtd > 500 %} (mostrando 500){% endif %}</td><td class="text-end"><b>{{ total|brl }}</b></td><td colspan="2"></td></tr></tfoot>
+</table></div></div>
+{% if situacao == 'abertas' or situacao == 'vencidas' %}
+<button class="btn btn-outline-primary btn-sm mt-2"><i class="bi bi-send"></i> Emitir boleto/PIX (Asaas) das selecionadas</button>
+{% endif %}
+</form>
+{% endblock %}

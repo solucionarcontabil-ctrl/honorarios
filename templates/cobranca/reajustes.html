@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Reajustes{% endblock %}
+{% block conteudo %}
+<h4>Reajustes de honorários</h4>
+<form class="row g-2 mb-3 align-items-end">
+  <div class="col-auto"><label class="form-label small">Mês do reajuste</label><input type="month" name="mes" value="{{ mes|date:'Y-m' }}" class="form-control"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Consultar</button></div>
+</form>
+<form method="post">{% csrf_token %}<input type="hidden" name="mes" value="{{ mes|date:'Y-m' }}">
+<p class="text-muted small">Índices acumulados dos 12 meses anteriores, consultados no Banco Central. Você pode alterar o percentual antes de aplicar.</p>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+  <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" checked onclick="document.querySelectorAll('.sel').forEach(e=>e.checked=this.checked)"></th><th>Cliente / serviço</th><th>Índice</th><th>Período</th><th class="text-end">Valor atual</th><th style="width:130px">Reajuste %</th><th class="text-end">Novo valor (prévia)</th></tr></thead>
+  <tbody>{% for c in contratos %}
+    <tr>
+      <td><input type="checkbox" class="form-check-input sel" name="contratos" value="{{ c.pk }}" checked></td>
+      <td><b>{{ c.cliente }}</b><br><small class="text-muted">{{ c.descricao }}</small></td>
+      <td>{{ c.get_indice_reajuste_display }}</td>
+      <td class="small">{{ c.periodo|default:"—" }}<input type="hidden" name="periodo_{{ c.pk }}" value="{{ c.periodo }}"></td>
+      <td class="text-end">{{ c.valor_mensal|brl }}</td>
+      <td><input name="perc_{{ c.pk }}" value="{% if c.perc_sugerido is not None %}{{ c.perc_sugerido|floatformat:'4u' }}{% endif %}" class="form-control form-control-sm perc" data-base="{{ c.valor_mensal|stringformat:'s' }}" data-alvo="novo_{{ c.pk }}" required></td>
+      <td class="text-end fw-semibold" id="novo_{{ c.pk }}">{% if c.valor_sugerido %}{{ c.valor_sugerido|brl }}{% else %}—{% endif %}</td>
+    </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum contrato com reajuste pendente em {{ mes|mesano }}.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% if contratos %}
+<div class="form-check mt-3"><input class="form-check-input" type="checkbox" name="atualizar_abertas" id="ab" checked>
+  <label class="form-check-label" for="ab">Atualizar também as mensalidades já geradas que vencem a partir de hoje (ainda não emitidas no banco)</label></div>
+<button class="btn btn-primary mt-2" onclick="return confirm('Aplicar reajuste nos contratos selecionados?')"><i class="bi bi-graph-up-arrow"></i> Aplicar reajustes</button>
+{% endif %}
+</form>
+{% if historico %}
+<h5 class="mt-4">Últimos reajustes aplicados</h5>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Data</th><th>Cliente</th><th>Índice</th><th>%</th><th class="text-end">De</th><th class="text-end">Para</th><th>Por</th></tr></thead>
+  <tbody>{% for h in historico %}<tr><td>{{ h.data|date:"d/m/Y" }}</td><td>{{ h.contrato.cliente }}</td><td>{{ h.indice }} <small class="text-muted">{{ h.periodo }}</small></td><td>{{ h.percentual|floatformat:2 }}%</td><td class="text-end">{{ h.valor_anterior|brl }}</td><td class="text-end">{{ h.valor_novo|brl }}</td><td>{{ h.usuario|default:"—" }}</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script>
+const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+document.querySelectorAll('.perc').forEach(i => i.addEventListener('input', () => {
+  const p = parseFloat(i.value.replace(',', '.')); const b = parseFloat(i.dataset.base);
+  document.getElementById(i.dataset.alvo).textContent = isNaN(p) ? '—' : fmt(Math.round(b*(1+p/100)*100)/100);
+}));
+</script>{% endblock %}

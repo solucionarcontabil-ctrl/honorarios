@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Inadimplência{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Inadimplência</h4>
+  <form class="d-flex gap-2"><select name="responsavel" class="form-select form-select-sm" onchange="this.form.submit()"><option value="">Todos os responsáveis</option>
+    {% for u in usuarios %}<option value="{{ u.pk }}" {% if request.GET.responsavel == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></form>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Total em atraso</div><div class="fs-5 fw-semibold text-danger">{{ total|brl }}</div><small class="text-muted">atualizado {{ total_atualizado|brl }}</small></div></div></div>
+  <div class="col-6 col-md"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Até 30 dias</div><div class="fs-5">{{ faixas.ate30|brl }}</div></div></div></div>
+  <div class="col-6 col-md"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">31 a 60 dias</div><div class="fs-5">{{ faixas.31a60|brl }}</div></div></div></div>
+  <div class="col-6 col-md"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">61 a 90 dias</div><div class="fs-5">{{ faixas.61a90|brl }}</div></div></div></div>
+  <div class="col-6 col-md"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Mais de 90 dias</div><div class="fs-5 text-danger">{{ faixas.mais90|brl }}</div></div></div></div>
+</div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead class="table-light"><tr><th>Cliente</th><th>Responsável</th><th class="text-center">Parcelas</th><th class="text-center">Maior atraso</th><th class="text-end">Valor</th><th class="text-end">Atualizado</th><th></th></tr></thead>
+  <tbody>{% for l in linhas %}
+    <tr>
+      <td><a href="{% url 'cliente_detalhe' l.cliente.pk %}" class="fw-semibold text-decoration-none">{{ l.cliente }}</a>
+        <div class="small text-muted">{% for c in l.cobrancas %}<a href="{% url 'cobranca_detalhe' c.pk %}" class="text-muted">{{ c.competencia|mesano }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</div></td>
+      <td>{{ l.cliente.responsavel_nome }}</td>
+      <td class="text-center">{{ l.qtd }}</td>
+      <td class="text-center"><span class="badge {% if l.maior_atraso > 60 %}bg-danger{% elif l.maior_atraso > 30 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ l.maior_atraso }} dias</span></td>
+      <td class="text-end">{{ l.total|brl }}</td><td class="text-end text-danger">{{ l.atualizado|brl }}</td>
+      <td class="text-end"><a href="{{ l.whatsapp }}" target="_blank" class="btn btn-sm btn-success" title="Cobrar no WhatsApp (parcela mais antiga)"><i class="bi bi-whatsapp"></i></a></td>
+    </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum cliente inadimplente. 🎉</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

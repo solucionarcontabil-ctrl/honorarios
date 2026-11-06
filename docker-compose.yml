@@ -1,0 +1,65 @@
+# Sobe tudo com:  docker compose up -d --build
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: honorarios
+      POSTGRES_USER: honorarios
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: America/Sao_Paulo
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U honorarios"]
+      interval: 10s
+      retries: 5
+
+  web:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://honorarios:${DB_PASSWORD}@db:5432/honorarios
+    depends_on:
+      db: { condition: service_healthy }
+
+  # HTTPS automático (certificado gratuito Let's Encrypt)
+  caddy:
+    image: caddy:2
+    restart: always
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on: [web]
+
+  # Backup diário do banco (guarda 30 dias em ./backups)
+  backup:
+    image: postgres:17
+    restart: always
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  # Lembretes por e-mail, uma vez por dia
+  lembretes:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://honorarios:${DB_PASSWORD}@db:5432/honorarios
+    command: ["sh", "-c", "while true; do python manage.py enviar_lembretes; sleep 86400; done"]
+    depends_on: [web]
+
+volumes:
+  dbdata:
+  caddydata:

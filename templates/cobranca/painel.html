@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Painel{% endblock %}
+{% block conteudo %}
+{% if pendente_geracao %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center">
+  <span><i class="bi bi-lightning"></i> Há <b>{{ pendente_geracao }}</b> mensalidade(s) de {{ competencia_atual|mesano }} ainda não gerada(s).</span>
+  <a href="{% url 'gerar' %}?competencia={{ competencia_atual|date:'Y-m' }}" class="btn btn-sm btn-warning">Gerar agora</a>
+</div>
+{% endif %}
+{% if reajustes %}
+<div class="alert alert-info d-flex justify-content-between align-items-center">
+  <span><i class="bi bi-graph-up-arrow"></i> <b>{{ reajustes|length }}</b> contrato(s) com reajuste previsto para este mês.</span>
+  <a href="{% url 'reajustes' %}" class="btn btn-sm btn-info">Ver reajustes</a>
+</div>
+{% endif %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body">
+    <div class="text-muted small">A receber neste mês</div><div class="valor text-primary">{{ a_receber_mes|brl }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body">
+    <div class="text-muted small">Recebido neste mês</div><div class="valor text-success">{{ recebido_mes|brl }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><a href="{% url 'inadimplencia' %}" class="text-decoration-none"><div class="card card-kpi shadow-sm"><div class="card-body">
+    <div class="text-muted small">Em atraso ({{ qtd_inadimplentes }} cliente{{ qtd_inadimplentes|pluralize }})</div><div class="valor text-danger">{{ total_atraso|brl }}</div></div></div></a></div>
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body">
+    <div class="text-muted small">Carteira mensal ({{ qtd_clientes }} clientes)</div><div class="valor">{{ carteira_mensal|brl }}</div></div></div></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold text-danger"><i class="bi bi-exclamation-circle"></i> Vencidas</div>
+      <div class="list-group list-group-flush">
+      {% for c in atrasadas %}
+        <a href="{% url 'cobranca_detalhe' c.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>{{ c.cliente }} <small class="text-muted">· {{ c.competencia|mesano }} · {{ c.dias_atraso }} dia{{ c.dias_atraso|pluralize }}</small></span><b>{{ c.valor|brl }}</b></a>
+      {% empty %}<div class="list-group-item text-muted">Nenhuma cobrança vencida. 🎉</div>{% endfor %}
+      </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold"><i class="bi bi-calendar-event"></i> Próximos vencimentos</div>
+      <div class="list-group list-group-flush">
+      {% for c in proximos %}
+        <a href="{% url 'cobranca_detalhe' c.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>{{ c.cliente }} <small class="text-muted">· vence {{ c.vencimento|date:"d/m" }}</small></span><b>{{ c.valor|brl }}</b></a>
+      {% empty %}<div class="list-group-item text-muted">Nada a vencer.</div>{% endfor %}
+      </div></div>
+  </div>
+  <div class="col-12">
+    <div class="card shadow-sm"><div class="card-header bg-white fw-semibold">Últimos 12 meses — previsto × recebido (por vencimento)</div>
+      <div class="card-body"><div class="table-responsive"><table class="table table-sm mb-0">
+        <thead><tr><th>Mês</th><th style="width:45%"></th><th class="text-end">Previsto</th><th class="text-end">Recebido</th><th class="text-end">%</th></tr></thead>
+        <tbody>{% for m in meses %}<tr>
+          <td>{{ m.mes|mesano }}</td>
+          <td><div class="bg-primary-subtle barra mb-1" style="width:{{ m.p_prev }}%"></div><div class="bg-success barra" style="width:{{ m.p_rec }}%"></div></td>
+          <td class="text-end">{{ m.previsto|brl }}</td><td class="text-end">{{ m.recebido|brl }}</td>
+          <td class="text-end">{% if m.previsto %}{% widthratio m.recebido m.previsto 100 %}%{% else %}—{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+      </table></div></div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Clientes{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Clientes</h4>
+  <a href="{% url 'cliente_novo' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Novo cliente</a>
+</div>
+<form class="row g-2 mb-3">
+  <div class="col-md-5"><input name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome, CNPJ/CPF, contato…"></div>
+  <div class="col-md-2"><select name="situacao" class="form-select">
+    <option value="ativos" {% if situacao == 'ativos' %}selected{% endif %}>Ativos</option>
+    <option value="inativos" {% if situacao == 'inativos' %}selected{% endif %}>Inativos</option>
+    <option value="todos" {% if situacao == 'todos' %}selected{% endif %}>Todos</option></select></div>
+  <div class="col-md-3"><select name="responsavel" class="form-select"><option value="">Todos os responsáveis</option>
+    {% for u in usuarios %}<option value="{{ u.pk }}" {% if request.GET.responsavel == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Filtrar</button></div>
+</form>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead class="table-light"><tr><th>Cliente</th><th>CNPJ/CPF</th><th>Regime</th><th>Responsável</th><th class="text-end">Honorário mensal</th><th class="text-center">Em atraso</th></tr></thead>
+  <tbody>{% for c in clientes %}
+    <tr onclick="location='{% url 'cliente_detalhe' c.pk %}'" style="cursor:pointer" class="{% if not c.ativo %}text-muted{% endif %}">
+      <td><b>{{ c }}</b>{% if c.nome_fantasia %}<br><small class="text-muted">{{ c.nome }}</small>{% endif %}</td>
+      <td class="text-nowrap">{{ c.documento_formatado }}</td><td>{{ c.get_regime_display }}</td>
+      <td>{{ c.responsavel_nome }}</td>
+      <td class="text-end">{{ c.mensal|brl }}</td>
+      <td class="text-center">{% if c.qtd_atraso %}<span class="badge bg-danger">{{ c.qtd_atraso }}</span>{% else %}—{% endif %}</td>
+    </tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum cliente encontrado.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

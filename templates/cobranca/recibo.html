@@ -1,0 +1,15 @@
+{% load moeda %}<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>Recibo</title>
+<style>body{font-family:Arial,sans-serif;max-width:720px;margin:40px auto;color:#222}h1{text-align:center;font-size:22px;letter-spacing:2px}
+.box{border:1px solid #333;padding:24px}.valor{float:right;border:1px solid #333;padding:6px 12px;font-weight:bold}.ass{margin-top:60px;text-align:center}
+.ass div{border-top:1px solid #333;width:60%;margin:0 auto;padding-top:4px}@media print{button{display:none}}</style></head>
+<body><button onclick="print()">Imprimir</button>
+<div class="box">
+  <span class="valor">{{ c.valor_pago|brl }}</span>
+  <h1>RECIBO</h1>
+  <p>Recebemos de <b>{{ c.cliente.nome }}</b>, inscrito(a) no {% if c.cliente.tipo_pessoa == 'PJ' %}CNPJ{% else %}CPF{% endif %} sob nº <b>{{ c.cliente.documento_formatado }}</b>,
+  a importância de <b>{{ c.valor_pago|brl }}</b>, referente a <b>{{ c.descricao }}</b>, competência {{ c.competencia|mesano }}.</p>
+  <p>Pagamento efetuado em {{ c.data_pagamento|date:"d/m/Y" }}{% if c.forma_recebimento %} via {{ c.get_forma_recebimento_display }}{% endif %}.</p>
+  <p>Para clareza, firmamos o presente.</p>
+  <p style="text-align:right">{{ config.cidade|title }}, {{ c.data_pagamento|date:"d \d\e F \d\e Y" }}.</p>
+  <div class="ass"><div>{{ config.nome_escritorio }}{% if config.cnpj %}<br>CNPJ {{ config.cnpj }}{% endif %}</div></div>
+</div></body></html>
