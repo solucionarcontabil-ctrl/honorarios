@@ -86,6 +86,7 @@ Tudo registra **quem fez** (você ou seu pai): quem criou, quem deu baixa e quem
 4. Para usar: dois cliques em **`2-ABRIR O SISTEMA.bat`**. O navegador abre em `http://127.0.0.1:8000`.
    Deixe a janela preta aberta enquanto usa; para desligar, feche-a.
 5. **`3-FAZER BACKUP.bat`** copia o banco e os arquivos para a pasta `backups`.
+6. **`4-REDEFINIR SENHA.bat`** mostra os usuários cadastrados e troca a senha (ou cria o usuário que faltou). O login não diferencia maiúsculas de minúsculas.
 
 **Mac/Linux:** `sh instalar/mac-linux.sh`
 

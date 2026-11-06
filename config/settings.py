@@ -105,6 +105,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATA_UPLOAD_MAX_NUMBER_FILES = 2000
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
+AUTHENTICATION_BACKENDS = ["cobranca.autenticacao.LoginSemMaiusculas"]
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "painel"
 LOGOUT_REDIRECT_URL = "login"

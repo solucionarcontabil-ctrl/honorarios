@@ -253,3 +253,21 @@ class ImportacaoRegimeTest(TestCase):
         self.assertEqual(reg, {"11222333000181": "SIMPLES", "45723174000110": "REAL", "52998224725": "PF",
                                "60701190000104": "OUTRO", "33000167000101": "PRESUMIDO"})
         self.assertTrue([l for l in linhas if l.get("regime_aplicado")])
+
+
+class LoginTest(TestCase):
+    def test_login_ignora_maiusculas_e_espacos(self):
+        get_user_model().objects.create_user("william", password="senha-muito-forte-1")
+        self.assertTrue(self.client.login(username=" William ", password="senha-muito-forte-1"))
+        self.assertFalse(self.client.login(username="william", password="errada"))
+
+    def test_redefinir_senha(self):
+        from unittest import mock
+
+        from django.core.management import call_command
+        u = get_user_model().objects.create_user("william", password="senha-antiga-12345")
+        with mock.patch("builtins.input", return_value="WILLIAM"), \
+                mock.patch("getpass.getpass", return_value="senha-nova-forte-987"):
+            call_command("redefinir_senha", stdout=open("/dev/null", "w"))
+        u.refresh_from_db()
+        self.assertTrue(u.check_password("senha-nova-forte-987"))
