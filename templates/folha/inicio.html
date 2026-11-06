@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Folha{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0"><i class="bi bi-person-vcard"></i> Folha de pagamento</h4>
+  <a href="{% url 'folha_tabelas' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-table"></i> Tabelas legais</a></div>
+{% if pendentes %}<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> {{ pendentes }} tabela(s) legal(is) aguardando conferência com a norma oficial. As folhas que as usam não podem ser fechadas. <a href="{% url 'folha_tabelas' %}">Conferir</a></div>{% endif %}
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+  <thead class="table-light"><tr><th>Cliente</th><th>Regime</th><th class="text-center">Ativos</th><th>Última folha</th></tr></thead>
+  <tbody>{% for c in clientes %}<tr onclick="location='{% url 'folha_cliente' c.pk %}'" style="cursor:pointer"><td class="fw-semibold">{{ c }}</td><td class="small">{{ c.get_regime_display }}</td>
+    <td class="text-center">{{ c.qtd|default:"—" }}</td><td>{{ c.ultima|date:"m/Y"|default:"—" }}</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

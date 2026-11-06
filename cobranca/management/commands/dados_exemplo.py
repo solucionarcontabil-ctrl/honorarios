@@ -139,4 +139,30 @@ class Command(BaseCommand):
         for m in (7, 8, 9, 10):
             ReceitaMensal.objects.get_or_create(cliente=clinica, competencia=_d(2026, m, 1), tipo="LP_SERVICOS",
                                                 defaults={"valor": Decimal("95000") + m * 1000})
+        # folha
+        from folha import services as fol
+        from folha.models import Dependente, Empregado, Ferias, TabelaLegal, Variavel
+        TabelaLegal.objects.filter(vigencia_inicio__year=2025).update(conferida=True)
+        func = [("Ana Souza", "52998224725", "Atendente", "2200", "2023-03-01", "EMPREGADO"),
+                ("Carlos Lima", "11144477735", "Padeiro", "2900", "2021-08-16", "EMPREGADO"),
+                ("Bruna Costa", "39053344705", "Confeiteira", "2600", "2025-02-10", "EMPREGADO"),
+                ("José Pão Quente", "86288366757", "Sócio administrador", "3000", "2020-01-02", "PROLABORE")]
+        for nome, cpf, cargo, sal, adm, tipo in func:
+            e, _ = Empregado.objects.get_or_create(cliente=padaria, cpf=cpf, defaults=dict(
+                matricula=fol.proxima_matricula(padaria), nome=nome, cargo=cargo, salario=Decimal(sal),
+                admissao=_d.fromisoformat(adm), tipo=tipo, recebe_adiantamento=tipo == "EMPREGADO",
+                vt_custo_mensal=Decimal("180") if nome.startswith("Ana") else 0, insalubridade=20 if cargo == "Padeiro" else 0))
+            if nome.startswith("Carlos"):
+                Dependente.objects.get_or_create(empregado=e, nome="Pedro Lima", defaults={"nascimento": _d(2018, 4, 2)})
+        comp = _d(2025, 10, 1)
+        carlos = Empregado.objects.get(cliente=padaria, nome="Carlos Lima")
+        Variavel.objects.get_or_create(empregado=carlos, competencia=comp, tipo="HE50", defaults={"quantidade": Decimal("12")})
+        Variavel.objects.get_or_create(empregado=carlos, competencia=comp, tipo="NOTURNO", defaults={"quantidade": Decimal("40")})
+        ana = Empregado.objects.get(cliente=padaria, nome="Ana Souza")
+        Variavel.objects.get_or_create(empregado=ana, competencia=comp, tipo="FALTAS", defaults={"quantidade": Decimal("1")})
+        fol.calcular_folha(padaria, comp, "ADIANTAMENTO", admin)
+        fol.calcular_folha(padaria, comp, "MENSAL", admin)
+        f = Ferias.objects.create(empregado=ana, aquisitivo_inicio=_d(2024, 3, 1), aquisitivo_fim=_d(2025, 2, 28),
+                                  gozo_inicio=_d(2025, 11, 3), dias=20, abono_dias=10)
+        fol.calcular_ferias(f, admin)
         self.stdout.write(self.style.SUCCESS("Dados de exemplo criados."))

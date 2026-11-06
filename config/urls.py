@@ -14,5 +14,6 @@ urlpatterns = [
     path("", include("rentabilidade.urls")),
     path("", include("contabil.urls")),
     path("", include("fiscal.urls")),
+    path("", include("folha.urls")),
     path("", include("cobranca.urls")),
 ]

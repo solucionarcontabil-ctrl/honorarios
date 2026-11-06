@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Férias — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "folha/_menu.html" %}
+<div class="row g-3">
+  <div class="col-lg-5 no-print"><div class="card shadow-sm"><div class="card-header bg-white"><b>{% if f %}Férias de {{ f.empregado.nome }}{% else %}Programar férias{% endif %}</b></div><div class="card-body">
+    <form method="post" novalidate>{% csrf_token %}
+      {% for campo in form %}<div class="mb-2">{% if campo.field.widget.input_type == 'checkbox' %}<div class="form-check">{{ campo }} <label class="form-check-label small">{{ campo.label|capfirst }}</label></div>
+        {% else %}<label class="form-label small fw-semibold">{{ campo.label|capfirst }}</label>{{ campo }}{% endif %}
+        {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}{% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>{% endfor %}
+      <button class="btn btn-primary btn-sm"><i class="bi bi-calculator"></i> Calcular</button>
+    </form>
+    <div class="form-text mt-2">Aviso de férias: com 30 dias de antecedência (art. 135). Pagamento: até 2 dias antes do início (art. 145).</div>
+  </div></div></div>
+  {% if f and f.valores %}{% with v=f.valores %}
+  <div class="col-lg-7"><div class="card shadow-sm"><div class="card-body">
+    <div class="d-flex justify-content-between"><h6>RECIBO DE FÉRIAS</h6><button onclick="print()" class="btn btn-sm btn-outline-secondary no-print"><i class="bi bi-printer"></i></button></div>
+    <div class="small mb-2">{{ c.nome }} — {{ c.documento_formatado }}<br><b>{{ f.empregado.nome }}</b> · matrícula {{ f.empregado.matricula }} · CPF {{ f.empregado.cpf }}<br>
+      Período aquisitivo {{ f.aquisitivo_inicio|date:"d/m/Y" }} a {{ f.aquisitivo_fim|date:"d/m/Y" }} · Gozo de {{ f.gozo_inicio|date:"d/m/Y" }} a {{ f.gozo_fim|date:"d/m/Y" }} ({{ f.dias }} dias){% if f.abono_dias %} · abono de {{ f.abono_dias }} dias{% endif %}<br>
+      <b>Pagamento até {{ f.pagamento_ate|date:"d/m/Y" }}</b></div>
+    {% for a in v.avisos %}<div class="alert alert-warning small py-1 no-print">{{ a }}</div>{% endfor %}
+    <table class="table table-sm small">
+      <tr><td>Férias ({{ f.dias }} dias)</td><td class="text-end">{{ v.ferias|brl }}</td><td></td></tr>
+      <tr><td>1/3 constitucional</td><td class="text-end">{{ v.terco|brl }}</td><td></td></tr>
+      {% if f.abono_dias %}<tr><td>Abono pecuniário ({{ f.abono_dias }} dias)</td><td class="text-end">{{ v.abono|brl }}</td><td></td></tr>
+      <tr><td>1/3 sobre o abono</td><td class="text-end">{{ v.terco_abono|brl }}</td><td></td></tr>{% endif %}
+      {% if f.adiantar_13 %}<tr><td>Adiantamento do 13º (1ª parcela)</td><td class="text-end">{{ v.adiantamento_13|brl }}</td><td></td></tr>{% endif %}
+      <tr><td>INSS</td><td></td><td class="text-end">{{ v.inss|brl }}</td></tr>
+      <tr><td>IRRF</td><td></td><td class="text-end">{{ v.irrf|brl }}</td></tr>
+      {% if v.pensao != '0' and v.pensao != '0.00' %}<tr><td>Pensão alimentícia</td><td></td><td class="text-end">{{ v.pensao|brl }}</td></tr>{% endif %}
+      <tr class="fw-semibold table-light"><td>Totais</td><td class="text-end">{{ v.proventos|brl }}</td><td class="text-end">{{ v.descontos|brl }}</td></tr>
+      <tr class="fw-bold"><td>LÍQUIDO</td><td colspan="2" class="text-end">{{ v.liquido|brl }}</td></tr>
+    </table>
+    <div class="small text-muted">FGTS: {{ v.fgts|brl }} (recolhido na competência do gozo).</div>
+    <ul class="small text-muted mt-2">{% for m in v.memoria %}<li>{{ m }}</li>{% endfor %}</ul>
+    <div class="mt-5 small text-center" style="border-top:1px solid #999;width:60%;margin:0 auto">Assinatura do empregado</div>
+  </div></div></div>
+  {% endwith %}{% endif %}
+</div>
+{% endblock %}

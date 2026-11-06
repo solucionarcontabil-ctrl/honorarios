@@ -8,3 +8,4 @@ qrcode==8.2
 cryptography==50.0.2
 openpyxl==3.1.5
 defusedxml==0.7.1
+reportlab==5.1.0

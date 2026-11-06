@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}{% if e %}{{ e.nome }}{% else %}Admissão{% endif %} — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "folha/_menu.html" %}
+<h5>{% if e %}Matrícula {{ e.matricula }} — {{ e.nome }}{% else %}Admissão / novo cadastro{% endif %}</h5>
+<div class="card shadow-sm mb-3"><div class="card-body">
+<form method="post" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">{% for campo in form %}
+    <div class="{% if campo.field.widget.input_type == 'checkbox' %}col-md-3 d-flex align-items-end{% elif campo.name == 'observacoes' or campo.name == 'endereco' %}col-md-6{% else %}col-md-3{% endif %}">
+      {% if campo.field.widget.input_type == 'checkbox' %}<div class="form-check">{{ campo }} <label class="form-check-label small" for="{{ campo.id_for_label }}">{{ campo.label|capfirst }}</label></div>
+      {% else %}<label class="form-label small fw-semibold" for="{{ campo.id_for_label }}">{{ campo.label|capfirst }}</label>{{ campo }}{% endif %}
+      {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
+      {% for err in campo.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+    </div>{% endfor %}</div>
+  <button class="btn btn-primary mt-3"><i class="bi bi-check-lg"></i> Salvar</button>
+</form></div></div>
+{% if e %}
+<div class="card shadow-sm" style="max-width:900px"><div class="card-header bg-white"><b>Dependentes</b> <small class="text-muted">(IRRF: dedução por dependente · salário-família: até 14 anos ou inválido)</small></div>
+  <table class="table table-sm mb-0 small">{% for d in e.dependentes.all %}<tr><td>{{ d.nome }}</td><td>{{ d.parentesco }}</td><td>{{ d.nascimento|date:"d/m/Y" }}</td>
+    <td>{% if d.ir %}IR{% endif %} {% if d.salario_familia %}Sal.-família{% endif %}</td>
+    <td class="text-end"><form method="post">{% csrf_token %}<input type="hidden" name="parte" value="excluir_dep"><button name="dep" value="{{ d.pk }}" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></form></td></tr>{% endfor %}</table>
+  <div class="card-body"><form method="post" class="row g-2 align-items-end">{% csrf_token %}<input type="hidden" name="parte" value="dependente">
+    {% for campo in dep_form %}<div class="col-md-{% if campo.field.widget.input_type == 'checkbox' %}2{% else %}3{% endif %}">{% if campo.field.widget.input_type == 'checkbox' %}<div class="form-check">{{ campo }} <label class="form-check-label small">{{ campo.label|capfirst|truncatechars:24 }}</label></div>{% else %}<label class="form-label small">{{ campo.label|capfirst }}</label>{{ campo }}{% endif %}</div>{% endfor %}
+    <div class="col-12"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Incluir dependente</button></div></form></div>
+</div>
+{% endif %}
+{% endblock %}

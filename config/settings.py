@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "rentabilidade",
     "contabil",
     "fiscal",
+    "folha",
 ]
 
 MIDDLEWARE = [

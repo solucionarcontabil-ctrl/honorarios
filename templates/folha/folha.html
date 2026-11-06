@@ -1,0 +1,53 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}{{ f }}{% endblock %}
+{% block conteudo %}
+{% include "folha/_menu.html" %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h5 class="mb-0">{{ f.get_tipo_display }} — {{ f.competencia|date:"m/Y" }} {% if f.fechada %}<span class="badge bg-success"><i class="bi bi-lock"></i> fechada por {{ f.fechada_por }} em {{ f.fechada_em|date:"d/m/Y H:i" }}</span>{% else %}<span class="badge bg-warning text-dark">aberta</span>{% endif %}</h5>
+  <div class="d-flex flex-wrap gap-2 no-print">
+    <a href="{% url 'folha_pdf' f.pk %}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf"></i> Holerites (PDF)</a>
+    {% if not f.fechada %}
+      <form method="post" action="{% url 'folha_acao' f.pk 'recalcular' %}">{% csrf_token %}<button class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat"></i> Recalcular</button></form>
+      <form method="post" action="{% url 'folha_acao' f.pk 'fechar' %}" onsubmit="return confirm('Fechar a folha?')">{% csrf_token %}<button class="btn btn-success btn-sm"><i class="bi bi-lock"></i> Fechar</button></form>
+    {% else %}
+      <form method="post" action="{% url 'folha_acao' f.pk 'portal' %}">{% csrf_token %}<button class="btn btn-outline-success btn-sm"><i class="bi bi-globe2"></i> Publicar holerites no portal</button></form>
+      <form method="post" action="{% url 'folha_acao' f.pk 'contabilizar' %}">{% csrf_token %}<button class="btn btn-outline-secondary btn-sm"><i class="bi bi-journal-text"></i> Contabilizar</button></form>
+      {% if user.is_staff %}<form method="post" action="{% url 'folha_acao' f.pk 'reabrir' %}" onsubmit="return confirm('Reabrir a folha?')">{% csrf_token %}<button class="btn btn-outline-warning btn-sm">Reabrir</button></form>{% endif %}
+    {% endif %}
+  </div>
+</div>
+{% for a in f.avisos %}<div class="alert alert-warning small py-2"><i class="bi bi-exclamation-triangle"></i> {{ a }}</div>{% endfor %}
+{% with r=f.resumo %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Proventos</div><div class="valor">{{ r.proventos|brl }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Líquido a pagar</div><div class="valor text-primary">{{ r.liquido|brl }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">FGTS (FGTS Digital)</div><div class="valor">{{ r.fgts|brl }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Custo total da folha</div><div class="valor">{{ r.custo_total|brl }}</div></div></div></div>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-lg-5"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>Valores para as guias</b> <small class="text-muted">(declarar via eSocial/DCTFWeb e FGTS Digital)</small></div>
+    <table class="table table-sm mb-0 small">
+      <tr><td>INSS descontado dos segurados</td><td class="text-end">{{ r.inss_segurados|brl }}</td></tr>
+      <tr><td>CPP patronal</td><td class="text-end">{{ r.cpp|brl }}</td></tr>
+      <tr><td>RAT ajustado (× FAP)</td><td class="text-end">{{ r.rat|brl }}</td></tr>
+      <tr><td>Terceiros</td><td class="text-end">{{ r.terceiros|brl }}</td></tr>
+      <tr><td>(−) Salário-família a compensar</td><td class="text-end">{{ r.salario_familia|brl }}</td></tr>
+      <tr class="fw-semibold"><td>INSS total a recolher (DCTFWeb)</td><td class="text-end">{{ r.inss_total_a_recolher|brl }}</td></tr>
+      <tr class="fw-semibold"><td>IRRF a recolher</td><td class="text-end">{{ r.irrf|brl }}</td></tr>
+      <tr class="fw-semibold"><td>FGTS</td><td class="text-end">{{ r.fgts|brl }}</td></tr>
+    </table></div></div>
+  <div class="col-lg-7"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>Holerites</b></div><div class="table-responsive"><table class="table table-sm table-hover mb-0 small align-middle">
+    <thead class="table-light"><tr><th>Empregado</th><th class="text-end">Proventos</th><th class="text-end">INSS</th><th class="text-end">IRRF</th><th class="text-end">Líquido</th><th class="text-end">FGTS</th><th></th></tr></thead>
+    <tbody>{% for h in holerites %}<tr>
+      <td><a data-bs-toggle="collapse" href="#h{{ h.pk }}" class="text-decoration-none">{{ h.empregado.nome }}</a></td><td class="text-end">{{ h.proventos|brl }}</td><td class="text-end">{{ h.inss|brl }}</td>
+      <td class="text-end">{{ h.irrf|brl }}</td><td class="text-end fw-semibold">{{ h.liquido|brl }}</td><td class="text-end">{{ h.fgts|brl }}</td>
+      <td><a href="{% url 'folha_pdf' f.pk %}?empregado={{ h.empregado.pk }}" target="_blank" title="PDF"><i class="bi bi-file-earmark-pdf"></i></a></td></tr>
+      <tr class="collapse" id="h{{ h.pk }}"><td colspan="7" class="bg-light">
+        <table class="table table-sm mb-2"><thead><tr><th>Cód.</th><th>Descrição</th><th>Ref.</th><th class="text-end">Vencimentos</th><th class="text-end">Descontos</th></tr></thead>
+          {% for i in h.itens %}<tr><td>{{ i.codigo }}</td><td>{{ i.descricao }}</td><td>{{ i.referencia }}</td><td class="text-end">{% if i.tipo == 'P' %}{{ i.valor|brl }}{% endif %}</td><td class="text-end">{% if i.tipo == 'D' %}{{ i.valor|brl }}{% endif %}</td></tr>{% endfor %}</table>
+        <ul class="mb-0 text-muted">{% for m in h.memoria %}<li>{{ m }}</li>{% endfor %}</ul></td></tr>
+    {% empty %}<tr><td colspan="7" class="text-center text-muted py-3">Nenhum holerite.</td></tr>{% endfor %}</tbody></table></div></div></div>
+</div>
+{% endwith %}
+<p class="small text-muted">Clique no nome para ver os itens e a memória de cálculo. Envio ao eSocial, DCTFWeb e FGTS Digital: próxima etapa (com certificado digital).</p>
+{% endblock %}

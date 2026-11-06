@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Rescisão — {{ e.nome }}{% endblock %}
+{% block conteudo %}
+{% include "folha/_menu.html" %}
+<div class="row g-3">
+  <div class="col-lg-4 no-print"><div class="card shadow-sm"><div class="card-header bg-white"><b>Rescisão de {{ e.nome }}</b><div class="small text-muted">Admissão {{ e.admissao|date:"d/m/Y" }} · salário {{ e.salario|brl }}</div></div><div class="card-body">
+    <form method="post" novalidate>{% csrf_token %}
+      {% for campo in form %}<div class="mb-2"><label class="form-label small fw-semibold">{{ campo.label|capfirst }}</label>{{ campo }}{% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}{% for err in campo.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}</div>{% endfor %}
+      <button class="btn btn-primary btn-sm"><i class="bi bi-calculator"></i> Calcular</button>
+    </form></div></div></div>
+  {% if r and r.valores %}{% with v=r.valores %}
+  <div class="col-lg-8"><div class="card shadow-sm"><div class="card-body">
+    <div class="d-flex justify-content-between"><h6>DEMONSTRATIVO DE RESCISÃO — {{ r.get_tipo_display|upper }}</h6><button onclick="print()" class="btn btn-sm btn-outline-secondary no-print"><i class="bi bi-printer"></i></button></div>
+    <div class="small mb-2">{{ c.nome }} — {{ c.documento_formatado }}<br><b>{{ e.nome }}</b> · CPF {{ e.cpf }} · admissão {{ e.admissao|date:"d/m/Y" }} · último dia {{ r.data_desligamento|date:"d/m/Y" }} · aviso {{ r.get_aviso_display|lower }} ({{ v.dias_aviso }} dias pela Lei 12.506)<br>
+      <b>Pagamento até {{ r.prazo_pagamento|date:"d/m/Y" }}</b> (10 dias, art. 477 §6º)</div>
+    {% for a in v.avisos %}<div class="alert alert-warning small py-1 no-print">{{ a }}</div>{% endfor %}
+    <table class="table table-sm small">
+      <thead class="table-light"><tr><th>Verba</th><th>Ref.</th><th class="text-end">Proventos</th><th class="text-end">Descontos</th></tr></thead>
+      {% for i in v.itens %}<tr><td>{{ i.descricao }}</td><td>{{ i.referencia }}</td><td class="text-end">{% if i.tipo == 'P' %}{{ i.valor|brl }}{% endif %}</td><td class="text-end">{% if i.tipo == 'D' %}{{ i.valor|brl }}{% endif %}</td></tr>{% endfor %}
+      <tr class="fw-semibold table-light"><td colspan="2">Totais</td><td class="text-end">{{ v.proventos|brl }}</td><td class="text-end">{{ v.descontos|brl }}</td></tr>
+      <tr class="fw-bold"><td colspan="2">LÍQUIDO A RECEBER</td><td colspan="2" class="text-end">{{ v.liquido|brl }}</td></tr>
+    </table>
+    <table class="table table-sm small mb-2" style="max-width:520px">
+      <tr><td>FGTS do mês da rescisão (base {{ v.base_fgts|brl }})</td><td class="text-end">{{ v.fgts_mes|brl }}</td></tr>
+      <tr><td>Multa do FGTS ({{ v.multa_pct|virgula }}%)</td><td class="text-end">{{ v.multa_fgts|brl }}</td></tr>
+      <tr><td>Saque do FGTS</td><td class="text-end">{{ v.saque_fgts }}</td></tr>
+      <tr><td>Seguro-desemprego</td><td class="text-end">{% if v.seguro_desemprego %}tem direito (se cumprir os requisitos){% else %}não{% endif %}</td></tr>
+    </table>
+    <ul class="small text-muted">{% for m in v.memoria %}<li>{{ m }}</li>{% endfor %}</ul>
+    <p class="small text-muted">Demonstrativo para conferência. O TRCT oficial e a comunicação ao eSocial (S-2299) e ao FGTS Digital são a próxima etapa.</p>
+    {% if e.ativo %}<form method="post" class="no-print" onsubmit="return confirm('Registrar o desligamento de {{ e.nome }}?')">{% csrf_token %}<button name="acao" value="confirmar" class="btn btn-danger btn-sm"><i class="bi bi-door-open"></i> Confirmar desligamento</button></form>{% endif %}
+  </div></div></div>
+  {% endwith %}{% endif %}
+</div>
+{% endblock %}

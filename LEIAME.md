@@ -150,6 +150,23 @@ Cada apuração é **salva com a memória de cálculo** e pode ser marcada como 
 **Fica para a etapa 2:** geração dos arquivos ECD, ECF, EFD ICMS/IPI e EFD-Contribuições (validação no PVA),
 partilha do DAS por tributo, segregação de ST/monofásicos no Simples, Lucro Real, apuração completa de ICMS (ST, DIFAL, CIAP).
 
+### Módulo 9 — Folha de pagamento
+
+| Tela | Para quê |
+|---|---|
+| **Empregados** | Admissão com CPF validado, NIS, CBO, categoria do eSocial, tipo (CLT, aprendiz, sócio com pró-labore), contrato (indeterminado, experiência até 90 dias, determinado), salário e divisor, insalubridade, periculosidade, VT, pensão alimentícia, adiantamento e **dependentes** (IRRF e salário-família) |
+| **Variáveis do mês** | Horas extras 50%/100%, adicional noturno, faltas, atrasos, DSR perdido, afastamento pelo INSS, comissões, gratificações, prêmios (sem INSS/FGTS), plano de saúde e outros descontos, numa grade por empregado |
+| **Processamentos** | **Folha mensal**, **adiantamento quinzenal**, **13º (1ª e 2ª parcela)**, com DSR sobre variáveis (calendário com feriados), hora com insalubridade/periculosidade, salário-família, VT 6%, pensão (bruto ou líquido), **INSS progressivo**, **IRRF** (deduções legais × desconto simplificado + redução da Lei 15.270/2025), FGTS (2% aprendiz) e encargos patronais (CPP, RAT × FAP, terceiros; Simples sem CPP, exceto o Anexo IV) |
+| **Holerites** | Detalhe com **memória de cálculo**, PDF (2 por página), **publicação no portal do cliente** e **contabilização** automática no módulo contábil |
+| **Valores para as guias** | INSS segurados + patronal − salário-família (DCTFWeb), IRRF e FGTS (FGTS Digital) |
+| **Férias** | Períodos aquisitivos, gozo, abono pecuniário (sem incidências), médias, adiantamento do 13º, validações da CLT (dobra, mínimo de 5 dias, início antes do DSR), recibo e prazo de pagamento. Na folha do mês, os dias de férias saem do salário e o INSS é acertado pelo total da competência |
+| **Rescisão** | Sem justa causa, pedido, justa causa, **acordo (484-A)**, fim de experiência, antecipadas (arts. 479/480); **aviso prévio proporcional** (Lei 12.506) com projeção, férias vencidas e proporcionais + 1/3, 13º proporcional, FGTS do mês e **multa de 40%/20%**, prazo de 10 dias e demonstrativo para impressão |
+| **Tabelas legais** | INSS, IRRF, salário mínimo e salário-família **com vigência**. As de 2026 vieram marcadas "A CONFERIR": confira com a norma oficial e marque como conferida. **A folha não fecha com tabela não conferida** |
+
+Ao **fechar** uma folha, ela alimenta sozinha a folha de 12 meses do **fator R** no fiscal.
+**Fica para a próxima etapa (com certificado digital):** geração e transmissão dos eventos do **eSocial**
+(S-2200, S-1200, S-1210, S-2230, S-2299 etc.), DCTFWeb e guia do FGTS Digital, TRCT no modelo oficial e informe de rendimentos.
+
 ## Avisos automáticos por e-mail
 
 O sistema manda sozinho:

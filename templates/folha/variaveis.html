@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Variáveis — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "folha/_menu.html" %}
+<form class="row g-2 mb-2 align-items-end"><div class="col-auto"><label class="form-label small">Competência</label><input type="month" name="competencia" value="{{ comp|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.submit()"></div>
+  <div class="col small text-muted">Horas e dias em quantidade (ex.: 10,5); comissões, prêmios e descontos em R$. DSR sobre horas extras e comissões é calculado sozinho.</div></form>
+<form method="post">{% csrf_token %}<input type="hidden" name="competencia" value="{{ comp|date:'Y-m' }}">
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0 align-middle small">
+  <thead class="table-light"><tr><th style="min-width:160px">Empregado</th>{% for t, n in cabecalho %}<th class="text-center" style="min-width:90px">{{ n }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for l in linhas %}<tr><td class="fw-semibold">{{ l.e.nome }}</td>
+    {% for t, v in l.campos %}<td><input name="v_{{ l.e.pk }}_{{ t }}" value="{% if v %}{{ v|floatformat:2 }}{% endif %}" class="form-control form-control-sm text-end" inputmode="decimal"></td>{% endfor %}</tr>
+  {% empty %}<tr><td colspan="15" class="text-center text-muted py-4">Nenhum empregado ativo na competência.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<button class="btn btn-primary btn-sm mt-2"><i class="bi bi-save"></i> Salvar variáveis</button>
+</form>
+{% endblock %}

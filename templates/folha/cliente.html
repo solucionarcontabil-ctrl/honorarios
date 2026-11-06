@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Folha — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "folha/_menu.html" %}
+<div class="small text-muted mb-3">Encargos: CPP {{ cfg.cpp|virgula }}% · RAT {{ cfg.rat|virgula }}% × FAP {{ cfg.fap|virgula }} · terceiros {{ cfg.terceiros|virgula }}% · FGTS {{ cfg.fgts|virgula }}%{% if c.regime == 'SIMPLES' %} (Simples: confira se o anexo IV exige CPP){% endif %}</div>
+<div class="card shadow-sm mb-3"><div class="card-body">
+  <form method="post" action="{% url 'folha_calcular' c.pk %}" class="row g-2 align-items-end">{% csrf_token %}
+    <div class="col-auto"><label class="form-label small fw-semibold">Competência</label><input type="month" name="competencia" value="{{ competencia|date:'Y-m' }}" class="form-control form-control-sm"></div>
+    <div class="col-auto"><label class="form-label small fw-semibold">Processamento</label><select name="tipo" class="form-select form-select-sm">{% for v, n in tipos %}<option value="{{ v }}">{{ n }}</option>{% endfor %}</select></div>
+    <div class="col-auto"><button class="btn btn-primary btn-sm"><i class="bi bi-calculator"></i> Calcular</button></div>
+    <div class="col small text-muted">Lance antes as <a href="{% url 'folha_variaveis' c.pk %}">variáveis do mês</a> (horas extras, faltas, comissões…). 13º: 1ª parcela até 30/11, 2ª até 20/12.</div>
+  </form>
+</div></div>
+<div class="row g-3">
+  <div class="col-xl-7">
+    <div class="card shadow-sm"><div class="card-header bg-white d-flex justify-content-between align-items-center"><b>Empregados e sócios</b>
+      <div class="d-flex gap-2"><a href="?{% if not mostrar_todos %}todos=1{% endif %}" class="btn btn-sm btn-link">{% if mostrar_todos %}só ativos{% else %}mostrar desligados{% endif %}</a>
+      <a href="{% url 'folha_empregado_novo' c.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-person-plus"></i> Admitir</a></div></div>
+    <div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+      <thead class="table-light"><tr><th>Mat.</th><th>Nome</th><th>Cargo</th><th>Admissão</th><th class="text-end">Salário</th><th></th></tr></thead>
+      <tbody>{% for e in empregados %}<tr class="{% if not e.ativo %}text-muted{% endif %}">
+        <td>{{ e.matricula }}</td><td><a href="{% url 'folha_empregado' c.pk e.pk %}" class="text-decoration-none fw-semibold">{{ e.nome }}</a>
+          {% if e.prolabore %}<span class="badge bg-info text-dark">pró-labore</span>{% elif e.tipo == 'APRENDIZ' %}<span class="badge bg-secondary">aprendiz</span>{% endif %}
+          {% if e.contrato == 'EXPERIENCIA' %}<span class="badge bg-warning text-dark">experiência até {{ e.fim_contrato|date:"d/m" }}</span>{% endif %}
+          {% if e.demissao %}<span class="badge bg-secondary">desligado {{ e.demissao|date:"d/m/Y" }}</span>{% endif %}</td>
+        <td class="small">{{ e.cargo }}</td><td class="small">{{ e.admissao|date:"d/m/Y" }}</td><td class="text-end">{{ e.salario|brl }}</td>
+        <td class="text-end text-nowrap">{% if e.ativo and not e.prolabore %}<a href="{% url 'folha_ferias_nova' c.pk %}?empregado={{ e.pk }}" class="btn btn-sm btn-link p-0 me-2" title="Férias"><i class="bi bi-sun"></i></a>
+          <a href="{% url 'folha_rescisao' c.pk e.pk %}" class="btn btn-sm btn-link p-0 text-danger" title="Rescisão"><i class="bi bi-door-open"></i></a>{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum cadastro.</td></tr>{% endfor %}</tbody></table></div></div>
+  </div>
+  <div class="col-xl-5">
+    <div class="card shadow-sm mb-3"><div class="card-header bg-white"><b>Processamentos</b></div><div class="list-group list-group-flush small">
+      {% for f in folhas %}<a href="{% url 'folha_detalhe' f.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+        <span>{{ f.competencia|date:"m/Y" }} · {{ f.get_tipo_display }}</span>
+        <span>{{ f.resumo.liquido|brl }} {% if f.fechada %}<i class="bi bi-lock text-success" title="fechada"></i>{% else %}<span class="badge bg-warning text-dark">aberta</span>{% endif %}</span></a>
+      {% empty %}<div class="list-group-item text-muted">Nenhuma folha calculada.</div>{% endfor %}</div></div>
+    <div class="card shadow-sm"><div class="card-header bg-white"><b>Férias</b></div><div class="list-group list-group-flush small">
+      {% for f in ferias %}<a href="{% url 'folha_ferias' c.pk f.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between"><span>{{ f.empregado.nome }}</span><span>{{ f.gozo_inicio|date:"d/m/Y" }} · {{ f.dias }}d{% if f.abono_dias %} + {{ f.abono_dias }} abono{% endif %}</span></a>
+      {% empty %}<div class="list-group-item text-muted">Nenhuma férias programada.</div>{% endfor %}</div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Tabelas legais{% endblock %}
+{% block conteudo %}
+<h4 class="mb-2">Tabelas legais da folha</h4>
+<div class="alert alert-light border small">Cada tabela vale a partir da sua vigência até a próxima. <b>Confira cada uma com a norma oficial</b> (portaria do INSS, decreto do salário mínimo, lei do IR) antes de marcar como conferida: a folha só fecha com tabelas conferidas. Ao editar uma tabela, ela volta para "a conferir".</div>
+{% for t in tabelas %}
+<div class="card shadow-sm mb-3 {% if not t.conferida %}border-warning{% endif %}"><div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <span><b>{{ t.get_tipo_display }}</b> — desde {{ t.vigencia_inicio|date:"d/m/Y" }} <small class="text-muted">· {{ t.fonte }}</small></span>
+  {% if t.conferida %}<span class="badge bg-success"><i class="bi bi-check-circle"></i> conferida{% if t.conferida_por %} por {{ t.conferida_por }} em {{ t.conferida_em|date:"d/m/Y" }}{% endif %}</span>
+  {% else %}<form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ t.pk }}"><button name="acao" value="conferir" class="btn btn-sm btn-warning" onclick="return confirm('Confirma que conferiu esta tabela com a norma oficial?')">Marcar como conferida</button></form>{% endif %}
+</div><div class="card-body small">
+  {% if t.tipo == 'INSS' %}<table class="table table-sm mb-2" style="max-width:420px"><tr><th>Até</th><th>Alíquota</th></tr>{% for lim, aliq in t.dados.faixas %}<tr><td>R$ {{ lim }}</td><td>{{ aliq }}%</td></tr>{% endfor %}<tr><td>Teto</td><td>R$ {{ t.dados.teto }}</td></tr></table>
+  {% elif t.tipo == 'IRRF' %}<table class="table table-sm mb-2" style="max-width:520px"><tr><th>Base até</th><th>Alíquota</th><th>Parcela a deduzir</th></tr>{% for lim, aliq, ded in t.dados.faixas %}<tr><td>{% if lim %}R$ {{ lim }}{% else %}acima{% endif %}</td><td>{{ aliq }}%</td><td>R$ {{ ded }}</td></tr>{% endfor %}</table>
+    Dependente: R$ {{ t.dados.dependente }} · desconto simplificado: R$ {{ t.dados.simplificado }}{% if t.dados.redutor %} · <b>redução</b>: isenção até R$ {{ t.dados.redutor.isencao_ate }} (até R$ {{ t.dados.redutor.reducao_maxima }}); de R$ {{ t.dados.redutor.isencao_ate }} a R$ {{ t.dados.redutor.faixa_ate }}: R$ {{ t.dados.redutor.constante }} − {{ t.dados.redutor.fator }} × rendimento{% endif %}
+  {% elif t.tipo == 'SALARIO_MINIMO' %}Valor mensal: <b>R$ {{ t.dados.valor }}</b>
+  {% elif t.tipo == 'SALARIO_FAMILIA' %}Cota por filho: <b>R$ {{ t.dados.cota }}</b> · para remuneração até <b>R$ {{ t.dados.limite }}</b>
+  {% else %}<code>{{ t.dados }}</code>{% endif %}
+  {% if user.is_staff %}<details class="mt-2"><summary>Editar</summary>
+    <form method="post" class="mt-2">{% csrf_token %}<input type="hidden" name="id" value="{{ t.pk }}">
+      <div class="row g-2"><div class="col-md-3"><input type="date" name="vigencia_inicio" value="{{ t.vigencia_inicio|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+        <div class="col-md-9"><input name="fonte" value="{{ t.fonte }}" class="form-control form-control-sm" placeholder="Fonte (norma)"></div>
+        <div class="col-12"><textarea name="dados" rows="6" class="form-control form-control-sm font-monospace">{{ t.dados_json }}</textarea></div></div>
+      <button class="btn btn-sm btn-outline-primary mt-2">Salvar</button></form>
+    </details>{% endif %}
+</div></div>
+{% endfor %}
+{% if user.is_staff %}<details><summary class="btn btn-sm btn-outline-primary">Nova tabela</summary>
+  <form method="post" class="card card-body mt-2">{% csrf_token %}
+    <div class="row g-2"><div class="col-md-3"><select name="tipo" class="form-select form-select-sm">{% for v, n in tipos %}<option value="{{ v }}">{{ n }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><input type="date" name="vigencia_inicio" class="form-control form-control-sm" required></div>
+      <div class="col-md-6"><input name="fonte" class="form-control form-control-sm" placeholder="Fonte (norma)"></div>
+      <div class="col-12"><textarea name="dados" rows="4" class="form-control form-control-sm font-monospace" placeholder='Copie o formato de uma tabela existente do mesmo tipo.' required></textarea></div></div>
+    <button class="btn btn-sm btn-primary mt-2">Criar</button></form></details>{% endif %}
+{% endblock %}
