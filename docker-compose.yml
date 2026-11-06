@@ -53,14 +53,16 @@ services:
     depends_on:
       db: { condition: service_healthy }
 
-  # Lembretes por e-mail, uma vez por dia
+  # E-mails automáticos do dia (honorários, resumo do portal, guias), todo dia às 8h.
+  # Rodar mais de uma vez no dia não duplica e-mails.
   lembretes:
     build: .
     restart: always
     env_file: .env
     environment:
       DATABASE_URL: postgres://honorarios:${DB_PASSWORD}@db:5432/honorarios
-    command: ["sh", "-c", "while true; do python manage.py enviar_lembretes; sleep 86400; done"]
+      TZ: America/Sao_Paulo
+    command: ["sh", "-c", "while true; do if [ \"$$(date +%H)\" = 08 ]; then python manage.py rotina_diaria; sleep 3600; fi; sleep 600; done"]
     depends_on: [web]
 
 volumes:

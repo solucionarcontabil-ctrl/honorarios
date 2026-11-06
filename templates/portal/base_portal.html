@@ -27,7 +27,7 @@
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ request.acesso_portal.nome|default:user.username }}</a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="{% url 'portal_senha' %}">Minha senha</a></li>
+            <li><a class="dropdown-item" href="{% url 'portal_senha' %}">Minha conta (senha e avisos)</a></li>
             <li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="dropdown-item">Sair</button></form></li>
           </ul></li>
       </ul>

@@ -1,0 +1,6 @@
+{% autoescape off %}Este é um e-mail de teste do sistema do escritório.
+Se chegou na caixa de entrada (e não no spam), os avisos automáticos estão prontos para funcionar.
+
+{{ site }}
+--
+{{ config.nome_escritorio }}{% endautoescape %}

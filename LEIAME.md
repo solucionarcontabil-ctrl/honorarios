@@ -119,6 +119,34 @@ Em **⚙ Configurações**, preencha o nome do escritório, a chave PIX, a multa
 O Asaas cobra uma taxa por boleto ou PIX recebido (consulte a tabela atual). Se preferir não pagar
 taxa, use só o **PIX na sua chave**: o sistema gera o QR Code e o copia-e-cola com o valor certo.
 
+## Avisos automáticos por e-mail
+
+O sistema manda sozinho:
+
+| Aviso | Para quem | Quando |
+|---|---|---|
+| **Documentos novos** | Pessoas com acesso ao portal daquela empresa que escolheram "a cada documento novo" | Na hora em que vocês publicam. **Um e-mail por envio**, mesmo com vários arquivos |
+| **Resumo diário** | Quem escolheu "um resumo por dia" | Às 8h, com o que foi publicado nas últimas 24h e ainda não foi baixado |
+| **Guia vencendo sem download** | Todos com aviso ligado (imediato ou resumo) | Às 8h, X dias antes do vencimento (padrão: 1), só se ninguém da empresa baixou |
+| **Cliente enviou documentos** | Responsável pelo cliente no escritório (ou a equipe toda, se não houver) | Na hora |
+| **Lembretes de honorários** | E-mail de cobrança do cliente | Às 8h (já existia; ligue em Configurações) |
+
+- Cada pessoa escolhe **a cada documento / resumo diário / não quero**. O cliente escolhe no portal (Minha conta) e vocês, em **Portal → Acessos dos clientes**.
+- Os arquivos **não vão anexados**: o e-mail traz o link do portal, por segurança, e assim o download continua valendo como ciência no protocolo.
+- **Portal → Avisos por e-mail** mostra tudo que foi enviado, com erro e botão de reenviar, e tem o botão **e-mail de teste**. Avisos com erro são tentados de novo sozinhos por até 48h.
+- Se o e-mail falhar, a publicação do documento **não** é afetada.
+- Ligar/desligar e o prazo do lembrete de guia ficam em **⚙ Configurações**.
+
+### Para ativar no servidor
+1. Escolha a conta de envio: Google Workspace, Microsoft 365, Brevo ou Amazon SES. Prefira um endereço do seu domínio, por exemplo `avisos@seuescritorio.com.br`.
+2. No painel do domínio, crie os registros **SPF** e **DKIM** que o provedor indicar (isso evita o spam).
+3. No `.env`, tire o `#` da linha `EMAIL_BACKEND` e preencha `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`,
+   `EMAIL_HOST_PASSWORD` e `DEFAULT_FROM_EMAIL`. Depois rode `docker compose up -d`.
+4. Em **Portal → Avisos por e-mail**, clique em **Testar** e confira se chegou na caixa de entrada.
+
+Enquanto o passo 3 não for feito, os avisos aparecem na lista como **"Não enviado"**: o sistema funciona normalmente, só não manda e-mail.
+O WhatsApp automático (API oficial da Meta) pode ser ligado depois, aproveitando os mesmos avisos.
+
 ## Backups (proteção dos dados)
 - O sistema faz **backup automático diário** do banco na pasta `backups/` do servidor e guarda 30 dias.
 - **Recomendado:** copiar essa pasta para fora do servidor (Google Drive, Backblaze, outro computador).

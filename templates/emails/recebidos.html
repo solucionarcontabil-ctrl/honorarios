@@ -1,0 +1,8 @@
+{% extends "emails/base.html" %}
+{% block corpo %}
+<p><b>{{ cliente }}</b> enviou {{ arquivos|length }} documento(s) pelo portal (protocolo {{ protocolo.codigo }}):</p>
+<ul>{% for a in arquivos %}<li>{{ a.titulo }} <span style="color:#777">— {{ a.get_categoria_display }}{% if a.competencia %}, {{ a.competencia|date:"m/Y" }}{% endif %}</span></li>{% endfor %}</ul>
+{% if protocolo.observacoes %}<p style="background:#f8f9fa;padding:12px;border-radius:6px">{{ protocolo.observacoes|linebreaksbr }}</p>{% endif %}
+{% include "emails/_botao.html" with url=site|add:"/documentos/" rotulo="Ver documentos recebidos" %}
+{% endblock %}
+{% block rodape %}Aviso interno do sistema do escritório.{% endblock %}

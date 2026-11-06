@@ -1,0 +1,8 @@
+{% extends "emails/base.html" %}
+{% block corpo %}
+<p>Olá, {{ acesso.nome }}!</p>
+<p>Resumo dos documentos novos no portal nas últimas 24 horas:</p>
+{% for cliente, docs in grupos %}<p style="margin-bottom:4px"><b>{{ cliente }}</b></p>
+<ul style="margin-top:0">{% for a in docs %}<li>{{ a.titulo }}{% if a.vencimento %} — vence {{ a.vencimento|date:"d/m/Y" }}{% endif %}</li>{% endfor %}</ul>{% endfor %}
+{% include "emails/_botao.html" with url=site|add:"/portal/documentos/" rotulo="Abrir o portal" %}
+{% endblock %}

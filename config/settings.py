@@ -115,6 +115,14 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "nao-responda@localhost")
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)  # porta 465
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False
+EMAIL_TIMEOUT = 20
+
+# Endereço público do sistema, usado nos links dos e-mails automáticos
+SITE_URL = os.environ.get("SITE_URL") or (
+    f"https://{os.environ['DOMINIO']}" if os.environ.get("DOMINIO") else "http://localhost:8000")
 
 # Asaas (boleto + PIX). Deixe em branco para usar só PIX próprio / baixa manual.
 ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY", "")

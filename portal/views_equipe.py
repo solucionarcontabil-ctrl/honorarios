@@ -184,6 +184,60 @@ def protocolo_confirmar(request, pk):
     return redirect("protocolo_detalhe", pk=pk)
 
 
+# ------------------------------------------------------------------ avisos por e-mail
+@login_required
+def avisos_email(request):
+    from django.conf import settings
+
+    from . import avisos
+    from .models import AvisoEmail
+    qs = AvisoEmail.objects.select_related("cliente")
+    if request.GET.get("status"):
+        qs = qs.filter(status=request.GET["status"])
+    backend = settings.EMAIL_BACKEND.rsplit(".", 2)[-2]
+    return render(request, "portal/avisos.html", {
+        "avisos": qs[:300], "filtros": request.GET, "status": AvisoEmail.STATUS,
+        "qtd_erro": AvisoEmail.objects.filter(status="ERRO").count(),
+        "configurado": avisos.envio_configurado(),
+        "backend": backend, "host": settings.EMAIL_HOST, "remetente": settings.DEFAULT_FROM_EMAIL,
+        "site": settings.SITE_URL, "config": Configuracao.atual(),
+    })
+
+
+@login_required
+def aviso_detalhe(request, pk):
+    from .models import AvisoEmail
+    a = get_object_or_404(AvisoEmail, pk=pk)
+    return render(request, "portal/aviso_detalhe.html", {"a": a})
+
+
+@login_required
+@require_POST
+def aviso_acao(request, pk=None, acao=""):
+    from . import avisos
+    from .models import AvisoEmail
+    if acao == "teste":
+        para = request.POST.get("para", "").strip() or request.user.email
+        if not para:
+            messages.error(request, "Informe um e-mail para o teste.")
+        else:
+            a = avisos.email_teste(para)
+            if a.status == "ENVIADO":
+                messages.success(request, f"E-mail de teste enviado para {para}. Confira a caixa de entrada (e o spam).")
+            elif a.status == "SIMULADO":
+                messages.warning(request, "O envio de e-mail ainda não está configurado no servidor (.env). "
+                                          "O teste foi só registrado.")
+            else:
+                messages.error(request, f"Falhou: {a.erro}")
+    elif acao == "reenviar":
+        a = get_object_or_404(AvisoEmail, pk=pk)
+        if avisos.despachar(a):
+            messages.success(request, "Reenviado.")
+        else:
+            messages.error(request, f"Falhou de novo: {a.erro}")
+    return redirect("avisos_email")
+
+
 # ------------------------------------------------------------------ acessos
 @login_required
 def acessos(request):
@@ -218,7 +272,8 @@ def acesso_novo(request):
     form = AcessoForm(request.POST or None, initial=inicial)
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
-        acesso, senha = services.criar_acesso(d["nome"], d["login"], d["clientes"], request.user, d["email"], d["telefone"])
+        acesso, senha = services.criar_acesso(d["nome"], d["login"], d["clientes"], request.user, d["email"], d["telefone"],
+                                              d["avisos"] or "IMEDIATO")
         texto, link = _mensagem_acesso(request, acesso, senha)
         return render(request, "portal/acesso_criado.html", {"acesso": acesso, "senha": senha, "texto": texto, "link": link})
     return render(request, "cobranca/form.html", {"form": form, "titulo": "Novo acesso ao portal", "voltar": "/acessos/"})
@@ -233,6 +288,16 @@ def acesso_acao(request, pk, acao):
         texto, link = _mensagem_acesso(request, acesso, senha)
         return render(request, "portal/acesso_criado.html", {"acesso": acesso, "senha": senha, "texto": texto,
                                                              "link": link, "redefinida": True})
+    if acao == "avisos":
+        if request.POST.get("avisos") in dict(AcessoPortal.AVISOS):
+            acesso.avisos = request.POST["avisos"]
+            acesso.save(update_fields=["avisos"])
+        email = request.POST.get("email", "").strip()
+        if "email" in request.POST and email != acesso.usuario.email:
+            acesso.usuario.email = email
+            acesso.usuario.save(update_fields=["email"])
+        messages.success(request, f"Avisos de {acesso.nome} atualizados.")
+        return redirect("acessos")
     if acao == "ativar":
         acesso.ativo = not acesso.ativo
         acesso.save(update_fields=["ativo"])

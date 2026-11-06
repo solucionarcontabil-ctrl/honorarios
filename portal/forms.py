@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from cobranca.forms import DATA, BootstrapMixin
 from cobranca.models import Cliente
 
-from .models import CATEGORIAS, Protocolo
+from .models import CATEGORIAS, AcessoPortal, Protocolo
 
 MES = forms.DateInput(attrs={"type": "month"})
 
@@ -48,8 +48,9 @@ class EnviarClienteForm(BootstrapMixin, forms.Form):
 class AcessoForm(BootstrapMixin, forms.Form):
     nome = forms.CharField(label="nome da pessoa")
     login = forms.CharField(label="login", help_text="Sugestão: o e-mail ou o CPF da pessoa.")
-    email = forms.EmailField(required=False)
+    email = forms.EmailField(required=False, help_text="Para onde vão os avisos de documentos novos.")
     telefone = forms.CharField(label="WhatsApp", required=False)
+    avisos = forms.ChoiceField(label="avisos por e-mail", choices=AcessoPortal.AVISOS, initial="IMEDIATO", required=False)
     clientes = forms.ModelMultipleChoiceField(queryset=Cliente.objects.filter(ativo=True),
                                               help_text="Segure Ctrl para marcar mais de uma empresa.")
 
@@ -75,3 +76,8 @@ class ProtocoloForm(BootstrapMixin, forms.ModelForm):
         self.fields["cliente"].queryset = Cliente.objects.filter(ativo=True)
         self.fields["responsavel"].queryset = get_user_model().objects.filter(is_active=True, acesso_portal__isnull=True)
         self.fields["responsavel"].label_from_instance = lambda u: u.get_full_name() or u.username
+
+
+class MinhaContaForm(BootstrapMixin, forms.Form):
+    email = forms.EmailField(label="e-mail para avisos", required=False)
+    avisos = forms.ChoiceField(label="quero receber", choices=AcessoPortal.AVISOS)

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Aviso por e-mail{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">{{ a.assunto }}</h5>
+  <a href="{% url 'avisos_email' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Avisos</a>
+</div>
+<div class="small mb-2">Para: <b>{{ a.destinatarios|default:"(ninguém com e-mail cadastrado)" }}</b> · {{ a.criado_em|date:"d/m/Y H:i" }} · {{ a.get_status_display }}{% if a.enviado_em %} em {{ a.enviado_em|date:"d/m/Y H:i" }}{% endif %} · tentativas: {{ a.tentativas }}</div>
+{% if a.erro %}<div class="alert alert-danger small"><b>Erro:</b> {{ a.erro }}</div>{% endif %}
+<div class="card shadow-sm"><iframe sandbox srcdoc="{{ a.corpo_html }}" style="width:100%;height:640px;border:0"></iframe></div>
+{% endblock %}

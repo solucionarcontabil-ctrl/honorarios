@@ -1,0 +1,9 @@
+{% load moeda %}<!doctype html><html lang="pt-br"><body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#222">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:24px 0"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e3e6ea">
+<tr><td style="background:#0b3d6e;color:#fff;padding:18px 24px;font-size:18px;font-weight:bold">{{ config.nome_escritorio }}</td></tr>
+<tr><td style="padding:24px;font-size:15px;line-height:1.5">{% block corpo %}{% endblock %}</td></tr>
+<tr><td style="padding:16px 24px;background:#f8f9fa;color:#777;font-size:12px;line-height:1.4">
+{{ config.nome_escritorio }}{% if config.telefone %} · {{ config.telefone }}{% endif %}{% if config.email %} · {{ config.email }}{% endif %}<br>
+{% block rodape %}Você recebe este e-mail porque tem acesso ao portal do cliente. Para mudar ou desligar os avisos, entre no portal em <b>Minha conta</b>.{% endblock %}
+</td></tr></table></td></tr></table></body></html>

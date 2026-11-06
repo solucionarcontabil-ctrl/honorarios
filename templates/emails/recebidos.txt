@@ -1,0 +1,7 @@
+{% autoescape off %}{{ cliente }} enviou {{ arquivos|length }} documento(s) pelo portal (protocolo {{ protocolo.codigo }}):
+{% for a in arquivos %}
+- {{ a.titulo }} — {{ a.get_categoria_display }}{% if a.competencia %}, {{ a.competencia|date:"m/Y" }}{% endif %}{% endfor %}
+{% if protocolo.observacoes %}
+Observação: {{ protocolo.observacoes }}
+{% endif %}
+Ver: {{ site }}/documentos/{% endautoescape %}

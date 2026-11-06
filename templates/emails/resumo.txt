@@ -1,0 +1,11 @@
+{% autoescape off %}Olá, {{ acesso.nome }}!
+
+Resumo dos documentos novos no portal nas últimas 24 horas:
+{% for cliente, docs in grupos %}
+{{ cliente }}:{% for a in docs %}
+- {{ a.titulo }}{% if a.vencimento %} — vence {{ a.vencimento|date:"d/m/Y" }}{% endif %}{% endfor %}
+{% endfor %}
+Acesse: {{ site }}/portal/documentos/
+--
+{{ config.nome_escritorio }}
+Para mudar ou desligar os avisos, entre no portal em "Minha conta".{% endautoescape %}

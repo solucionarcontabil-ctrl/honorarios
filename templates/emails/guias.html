@@ -1,0 +1,10 @@
+{% extends "emails/base.html" %}{% load moeda %}
+{% block corpo %}
+<p>Olá!</p>
+<p style="color:#b02a37"><b>Atenção:</b> {% if guias|length == 1 %}esta guia da <b>{{ cliente }}</b> vence em breve e ainda não foi baixada{% else %}estas guias da <b>{{ cliente }}</b> vencem em breve e ainda não foram baixadas{% endif %}:</p>
+<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px">
+{% for g in guias %}<tr style="border-bottom:1px solid #eee"><td><b>{{ g.titulo }}</b></td><td align="right">vence <b>{{ g.vencimento|date:"d/m/Y" }}</b>{% if g.valor %}<br>{{ g.valor|brl }}{% endif %}</td></tr>{% endfor %}
+</table>
+{% include "emails/_botao.html" with url=site|add:"/portal/documentos/?categoria=GUIA" rotulo="Baixar as guias" %}
+<p style="color:#777;font-size:13px">Se você já pagou, pode desconsiderar este aviso.</p>
+{% endblock %}

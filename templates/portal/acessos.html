@@ -6,16 +6,20 @@
   <a href="{% url 'acesso_novo' %}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Novo acesso</a>
 </div>
 <div class="card shadow-sm mb-3"><div class="table-responsive"><table class="table table-sm mb-0 align-middle">
-  <thead class="table-light"><tr><th>Pessoa</th><th>Login</th><th>Empresas</th><th>Último acesso</th><th class="text-end"></th></tr></thead>
+  <thead class="table-light"><tr><th>Pessoa</th><th>Login</th><th>Empresas</th><th>Avisos por e-mail</th><th>Último acesso</th><th class="text-end"></th></tr></thead>
   <tbody>{% for a in acessos %}<tr class="{% if not a.ativo %}text-muted{% endif %}">
-    <td>{{ a.nome }}{% if not a.ativo %} <span class="badge bg-secondary">desativado</span>{% endif %}<br><small class="text-muted">{{ a.usuario.email }} {{ a.telefone }}</small></td>
+    <td>{{ a.nome }}{% if not a.ativo %} <span class="badge bg-secondary">desativado</span>{% endif %}<br><small class="text-muted">{{ a.telefone }}</small></td>
     <td><code>{{ a.usuario.username }}</code></td>
     <td class="small">{% for c in a.clientes.all %}{{ c }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+    <td><form method="post" action="{% url 'acesso_acao' a.pk 'avisos' %}" class="d-flex gap-1">{% csrf_token %}
+      <input type="email" name="email" value="{{ a.usuario.email }}" class="form-control form-control-sm" placeholder="e-mail" style="width:170px">
+      <select name="avisos" class="form-select form-select-sm" style="width:150px" onchange="this.form.submit()">{% for v, n in a.AVISOS %}<option value="{{ v }}" {% if a.avisos == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select>
+      <button class="btn btn-sm btn-outline-secondary" title="Salvar"><i class="bi bi-check"></i></button></form></td>
     <td class="small">{{ a.usuario.last_login|date:"d/m/Y H:i"|default:"nunca entrou" }}</td>
     <td class="text-end text-nowrap">
       <form method="post" action="{% url 'acesso_acao' a.pk 'senha' %}" class="d-inline" onsubmit="return confirm('Gerar nova senha para {{ a.nome }}?')">{% csrf_token %}<button class="btn btn-sm btn-outline-secondary"><i class="bi bi-key"></i> Nova senha</button></form>
       <form method="post" action="{% url 'acesso_acao' a.pk 'ativar' %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-{% if a.ativo %}danger{% else %}success{% endif %}">{% if a.ativo %}Desativar{% else %}Ativar{% endif %}</button></form>
-    </td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhum cliente com acesso ainda.</td></tr>{% endfor %}</tbody>
+    </td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum cliente com acesso ainda.</td></tr>{% endfor %}</tbody>
 </table></div></div>
 {% if sem_acesso %}<div class="small text-muted mb-4"><b>Clientes PJ sem acesso ao portal:</b>
   {% for c in sem_acesso %}<a href="{% url 'acesso_novo' %}?cliente={{ c.pk }}" class="text-muted">{{ c }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}

@@ -14,7 +14,7 @@ from cobranca import pix
 from cobranca.models import Cobranca, Configuracao
 
 from . import services
-from .forms import EnviarClienteForm
+from .forms import EnviarClienteForm, MinhaContaForm
 from .models import CATEGORIAS, Arquivo, Protocolo
 
 
@@ -160,13 +160,25 @@ def protocolo_confirmar(request, pk):
 
 @portal
 def senha(request):
-    form = PasswordChangeForm(request.user, request.POST or None)
+    acesso = request.acesso_portal
+    conta = MinhaContaForm(request.POST if request.POST.get("parte") == "avisos" else None,
+                           initial={"email": request.user.email, "avisos": acesso.avisos})
+    if request.method == "POST" and request.POST.get("parte") == "avisos":
+        if conta.is_valid():
+            acesso.avisos = conta.cleaned_data["avisos"]
+            acesso.save(update_fields=["avisos"])
+            request.user.email = conta.cleaned_data["email"]
+            request.user.save(update_fields=["email"])
+            services.log(request, "preferência de aviso", request.cliente, acesso.avisos)
+            messages.success(request, "Preferências salvas.")
+            return redirect("portal_senha")
+    form = PasswordChangeForm(request.user, request.POST if request.POST.get("parte") == "senha" else None)
     for f in form.fields.values():
         f.widget.attrs["class"] = "form-control"
-    if request.method == "POST" and form.is_valid():
+    if request.method == "POST" and request.POST.get("parte") == "senha" and form.is_valid():
         form.save()
         update_session_auth_hash(request, form.user)
         services.log(request, "trocou senha", request.cliente)
         messages.success(request, "Senha alterada.")
         return redirect("portal_inicio")
-    return render(request, "portal/cliente_senha.html", {"form": form})
+    return render(request, "portal/cliente_senha.html", {"form": form, "conta": conta})

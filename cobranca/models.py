@@ -65,6 +65,12 @@ class Configuracao(models.Model):
         "margem desejada por cliente (%)", max_digits=5, decimal_places=2, default=Decimal("30.00"),
         help_text="Usada no relatório de rentabilidade para sugerir o honorário ideal.",
     )
+    avisos_portal_ativos = models.BooleanField(
+        "enviar avisos automáticos do portal por e-mail", default=True,
+        help_text="Documentos publicados, resumo diário, guia vencendo e aviso à equipe quando o cliente envia arquivos.",
+    )
+    lembrete_guia_dias = models.PositiveSmallIntegerField(
+        "lembrar guia não baixada X dias antes do vencimento", default=1, help_text="0 = não lembrar.")
     lembretes_email_ativos = models.BooleanField("enviar lembretes automáticos por e-mail", default=False)
 
     class Meta:

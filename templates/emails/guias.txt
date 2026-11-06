@@ -1,0 +1,10 @@
+{% load moeda %}{% autoescape off %}Olá!
+
+Atenção: {% if guias|length == 1 %}esta guia da {{ cliente }} vence em breve e ainda não foi baixada{% else %}estas guias da {{ cliente }} vencem em breve e ainda não foram baixadas{% endif %}:
+{% for g in guias %}
+- {{ g.titulo }} — vence {{ g.vencimento|date:"d/m/Y" }}{% if g.valor %} — {{ g.valor|brl }}{% endif %}{% endfor %}
+
+Baixe em: {{ site }}/portal/documentos/?categoria=GUIA
+Se você já pagou, pode desconsiderar este aviso.
+--
+{{ config.nome_escritorio }}{% endautoescape %}

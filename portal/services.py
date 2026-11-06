@@ -67,6 +67,7 @@ def publicar(cliente, arquivos, usuario, categoria, titulo="", competencia=None,
         )
         ItemProtocolo.objects.create(protocolo=prot, descricao=a.titulo, competencia=_mes_texto(competencia), arquivo=a)
         criados.append(a)
+    transaction.on_commit(lambda: _avisar("documentos_publicados", prot))
     return prot, criados
 
 
@@ -90,6 +91,7 @@ def receber(cliente, arquivos, usuario, categoria, competencia=None, observacao=
         )
         ItemProtocolo.objects.create(protocolo=prot, descricao=a.titulo, competencia=_mes_texto(competencia), arquivo=a)
         criados.append(a)
+    transaction.on_commit(lambda: _avisar("documentos_recebidos", prot))
     # XMLs e ZIPs de notas vão direto para a Central de XMLs
     xmls = [a for a in criados if a.extensao in ("xml", "zip") and categoria == "NOTAS"]
     lote = None
@@ -102,6 +104,16 @@ def receber(cliente, arquivos, usuario, categoria, competencia=None, observacao=
             a.arquivo.close()
         lote = importar(conteudos, usuario)
     return prot, criados, lote
+
+
+def _avisar(gatilho, protocolo):
+    """E-mail nunca pode impedir o envio do documento: qualquer falha fica só no registro."""
+    from . import avisos
+    try:
+        getattr(avisos, gatilho)(protocolo)
+    except Exception:  # noqa: BLE001
+        import logging
+        logging.getLogger(__name__).exception("Falha no aviso %s do protocolo %s", gatilho, protocolo.pk)
 
 
 def registrar_download(arquivo, request):
@@ -124,11 +136,12 @@ def gerar_senha(tamanho=10):
 
 
 @transaction.atomic
-def criar_acesso(nome, login, clientes, criado_por, email="", telefone=""):
+def criar_acesso(nome, login, clientes, criado_por, email="", telefone="", avisos="IMEDIATO"):
     User = get_user_model()
     senha = gerar_senha()
     usuario = User.objects.create_user(username=login, email=email, password=senha, first_name=nome[:150])
-    acesso = AcessoPortal.objects.create(usuario=usuario, nome=nome, telefone=telefone, criado_por=criado_por)
+    acesso = AcessoPortal.objects.create(usuario=usuario, nome=nome, telefone=telefone, criado_por=criado_por,
+                                         avisos=avisos)
     acesso.clientes.set(clientes)
     return acesso, senha
 

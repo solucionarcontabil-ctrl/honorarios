@@ -1,0 +1,12 @@
+{% extends "emails/base.html" %}{% load moeda %}
+{% block corpo %}
+<p>Olá!</p>
+<p>{% if arquivos|length == 1 %}Há um novo documento{% else %}Há <b>{{ arquivos|length }} novos documentos</b>{% endif %} da <b>{{ cliente }}</b> no portal:</p>
+<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px">
+{% for a in arquivos %}<tr style="border-bottom:1px solid #eee"><td><b>{{ a.titulo }}</b><br><span style="color:#777">{{ a.get_categoria_display }}{% if a.competencia %} · {{ a.competencia|date:"m/Y" }}{% endif %}</span></td>
+<td align="right" style="white-space:nowrap">{% if a.vencimento %}vence <b>{{ a.vencimento|date:"d/m/Y" }}</b>{% endif %}{% if a.valor %}<br><b>{{ a.valor|brl }}</b>{% endif %}</td></tr>{% endfor %}
+</table>
+{% if protocolo.observacoes %}<p style="background:#f8f9fa;padding:12px;border-radius:6px">{{ protocolo.observacoes|linebreaksbr }}</p>{% endif %}
+{% include "emails/_botao.html" with url=site|add:"/portal/documentos/" rotulo="Abrir o portal" %}
+<p style="color:#777;font-size:13px">Protocolo {{ protocolo.codigo }}. Por segurança, os arquivos não vão anexados: baixe pelo portal.</p>
+{% endblock %}

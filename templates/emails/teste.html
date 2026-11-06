@@ -1,0 +1,4 @@
+{% extends "emails/base.html" %}
+{% block corpo %}<p>Este é um <b>e-mail de teste</b> do sistema do escritório.</p><p>Se chegou na caixa de entrada (e não no spam), os avisos automáticos estão prontos para funcionar.</p>
+{% include "emails/_botao.html" with url=site rotulo="Abrir o sistema" %}{% endblock %}
+{% block rodape %}Teste enviado pelo sistema.{% endblock %}

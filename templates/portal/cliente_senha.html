@@ -1,8 +1,14 @@
 {% extends "portal/base_portal.html" %}
-{% block titulo %}Minha senha{% endblock %}
+{% block titulo %}Minha conta{% endblock %}
 {% block conteudo %}
-<h4 class="mb-3">Trocar senha</h4>
-<div class="card shadow-sm" style="max-width:480px"><div class="card-body"><form method="post">{% csrf_token %}
+<h4 class="mb-3">Minha conta</h4>
+<div class="card shadow-sm mb-4" style="max-width:480px"><div class="card-header bg-white fw-semibold"><i class="bi bi-envelope"></i> Avisos por e-mail</div><div class="card-body"><form method="post">{% csrf_token %}
+  <input type="hidden" name="parte" value="avisos">
+  {% for campo in conta %}<div class="mb-3"><label class="form-label small fw-semibold">{{ campo.label|capfirst }}</label>{{ campo }}{% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>{% endfor %}
+  <div class="form-text mb-2">Avisamos quando houver documento novo e quando uma guia estiver para vencer sem ter sido baixada.</div>
+  <button class="btn btn-primary">Salvar</button></form></div></div>
+<div class="card shadow-sm" style="max-width:480px"><div class="card-header bg-white fw-semibold"><i class="bi bi-key"></i> Trocar senha</div><div class="card-body"><form method="post">{% csrf_token %}
+  <input type="hidden" name="parte" value="senha">
   {% for campo in form %}<div class="mb-3"><label class="form-label small fw-semibold">{{ campo.label }}</label>{{ campo }}
     {% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}{% if campo.help_text %}<div class="form-text small">{{ campo.help_text|safe }}</div>{% endif %}</div>{% endfor %}
   <button class="btn btn-primary">Salvar</button></form></div></div>

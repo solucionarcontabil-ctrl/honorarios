@@ -40,6 +40,8 @@ class AcessoPortal(models.Model):
     clientes = models.ManyToManyField(Cliente, related_name="acessos_portal")
     nome = models.CharField("nome da pessoa", max_length=120)
     telefone = models.CharField("WhatsApp", max_length=20, blank=True)
+    AVISOS = [("IMEDIATO", "A cada documento novo"), ("RESUMO", "Um resumo por dia"), ("NENHUM", "Não quero avisos")]
+    avisos = models.CharField("avisos por e-mail", max_length=8, choices=AVISOS, default="IMEDIATO")
     ativo = models.BooleanField(default=True)
     criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -193,3 +195,30 @@ class LogPortal(models.Model):
 
     class Meta:
         ordering = ["-em"]
+
+
+class AvisoEmail(models.Model):
+    """Registro de cada e-mail automático (para conferir, evitar repetição e reenviar)."""
+
+    TIPOS = [("DOCUMENTOS", "Documentos publicados"), ("RESUMO", "Resumo diário"), ("GUIA", "Lembrete de guia"),
+             ("RECEBIDOS", "Cliente enviou documentos"), ("TESTE", "E-mail de teste")]
+    STATUS = [("ENVIADO", "Enviado"), ("ERRO", "Erro"), ("SEM_DESTINO", "Sem e-mail cadastrado"),
+              ("SIMULADO", "Não enviado (e-mail ainda não configurado)")]
+
+    tipo = models.CharField(max_length=10, choices=TIPOS)
+    chave = models.CharField(max_length=80, unique=True, help_text="Evita mandar o mesmo aviso duas vezes.")
+    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True)
+    destinatarios = models.TextField(blank=True)
+    assunto = models.CharField(max_length=200)
+    corpo = models.TextField(blank=True)
+    corpo_html = models.TextField(blank=True)
+    status = models.CharField(max_length=11, choices=STATUS, default="ENVIADO")
+    erro = models.TextField(blank=True)
+    tentativas = models.PositiveSmallIntegerField(default=0)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    enviado_em = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+        verbose_name = "aviso por e-mail"
+        verbose_name_plural = "avisos por e-mail"

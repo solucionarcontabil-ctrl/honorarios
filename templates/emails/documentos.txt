@@ -1,0 +1,14 @@
+{% load moeda %}{% autoescape off %}Olá!
+
+{% if arquivos|length == 1 %}Há um novo documento{% else %}Há {{ arquivos|length }} novos documentos{% endif %} da {{ cliente }} no portal:
+{% for a in arquivos %}
+- {{ a.titulo }} ({{ a.get_categoria_display }}{% if a.competencia %}, {{ a.competencia|date:"m/Y" }}{% endif %}){% if a.vencimento %} — vence {{ a.vencimento|date:"d/m/Y" }}{% endif %}{% if a.valor %} — {{ a.valor|brl }}{% endif %}{% endfor %}
+{% if protocolo.observacoes %}
+{{ protocolo.observacoes }}
+{% endif %}
+Acesse: {{ site }}/portal/documentos/
+
+Protocolo {{ protocolo.codigo }}. Por segurança, os arquivos não vão anexados: baixe pelo portal.
+--
+{{ config.nome_escritorio }}{% if config.telefone %} · {{ config.telefone }}{% endif %}
+Para mudar ou desligar os avisos, entre no portal em "Minha conta".{% endautoescape %}
