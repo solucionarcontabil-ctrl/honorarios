@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% load moeda contabil %}
+{% block titulo %}Balancete — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+{% include "contabil/_cabecalho_relatorio.html" with titulo="BALANCETE DE VERIFICAÇÃO" %}
+<form class="row g-2 mb-3 align-items-end no-print">
+  <div class="col-auto"><label class="form-label small">De</label><input type="date" name="de" value="{{ de|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até</label><input type="date" name="ate" value="{{ ate|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até o nível</label><select name="nivel" class="form-select form-select-sm">{% for n in "12349" %}<option value="{{ n }}" {% if nivel|stringformat:'s' == n %}selected{% endif %}>{% if n == '9' %}todos{% else %}{{ n }}{% endif %}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Ver</button></div>
+  <div class="col-auto"><a href="?{{ query }}&excel=1" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Excel</a> <button type="button" onclick="print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button></div>
+</form>
+<div class="d-none d-print-block small mb-2">Período: {{ de|date:"d/m/Y" }} a {{ ate|date:"d/m/Y" }}</div>
+{% if not fechado %}<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Débitos e créditos do período não batem. Verifique os lançamentos.</div>{% endif %}
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Código</th><th>Conta</th><th class="text-end">Saldo anterior</th><th class="text-end">Débitos</th><th class="text-end">Créditos</th><th class="text-end">Saldo atual</th></tr></thead>
+  <tbody>{% for l in linhas %}<tr class="{% if l.conta.sintetica %}fw-semibold table-light{% endif %}">
+    <td style="padding-left:{{ l.conta.nivel }}em">{% if not l.conta.sintetica %}<a href="{% url 'contabil_razao' cliente.pk %}?conta={{ l.conta.reduzido }}&de={{ de|date:'Y-m-d' }}&ate={{ ate|date:'Y-m-d' }}" class="text-reset">{{ l.conta.codigo }}</a>{% else %}{{ l.conta.codigo }}{% endif %}</td>
+    <td>{{ l.conta.nome }}</td>
+    <td class="text-end text-nowrap">{{ l.saldo_ant|dc }}</td><td class="text-end">{{ l.deb|brl }}</td><td class="text-end">{{ l.cred|brl }}</td>
+    <td class="text-end text-nowrap">{{ l.saldo|dc }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Sem movimento.</td></tr>{% endfor %}</tbody>
+  <tfoot class="table-light fw-semibold"><tr><td colspan="3" class="text-end">Totais do período (contas analíticas)</td><td class="text-end">{{ td|brl }}</td><td class="text-end">{{ tc|brl }}</td><td></td></tr></tfoot>
+</table></div></div>
+<p class="small text-muted mt-2">D = saldo devedor, C = saldo credor.</p>
+{% endblock %}

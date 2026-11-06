@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Balanço — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<form class="row g-2 mb-3 align-items-end no-print"><div class="col-auto"><label class="form-label small">Data-base</label><input type="date" name="data" value="{{ data_base|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Ver</button> <button type="button" onclick="print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button></div></form>
+{% if b.diferenca %}<div class="alert alert-danger">Ativo e Passivo + PL não batem (diferença {{ b.diferenca|brl }}). Verifique a natureza das contas.</div>{% endif %}
+<div class="card shadow-sm" style="max-width:820px"><div class="card-body">
+<h6 class="text-center mb-0">BALANÇO PATRIMONIAL</h6><div class="text-center small mb-3">{{ cliente.nome }} — em {{ data_base|date:"d/m/Y" }}</div>
+<table class="table table-sm mb-0">
+  {% for l in b.linhas %}<tr class="{% if l.conta.nivel == 1 %}fw-bold table-light{% elif l.conta.nivel == 2 %}fw-semibold{% endif %}">
+    <td style="padding-left:{{ l.conta.nivel }}em">{{ l.conta.nome }}{% if l.conta.codigo == '2.3' and b.resultado %} <small class="text-muted fw-normal">(inclui resultado do período não encerrado: {{ b.resultado|brl }})</small>{% endif %}</td>
+    <td class="text-end">{{ l.valor|brl }}</td></tr>{% endfor %}
+  <tr class="fw-bold"><td>TOTAL DO ATIVO</td><td class="text-end">{{ b.ativo|brl }}</td></tr>
+  <tr class="fw-bold"><td>TOTAL DO PASSIVO + PATRIMÔNIO LÍQUIDO</td><td class="text-end">{{ b.passivo_pl|brl }}</td></tr>
+</table></div></div>
+{% endblock %}

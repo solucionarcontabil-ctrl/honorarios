@@ -18,3 +18,17 @@ def brl(valor):
 @register.filter
 def mesano(d):
     return d.strftime("%m/%Y") if d else ""
+
+
+@register.filter
+def get_item(d, chave):
+    try:
+        return d.get(chave)
+    except AttributeError:
+        return None
+
+
+@register.filter
+def virgula(valor):
+    """Número com vírgula decimal (para alíquotas): 6.8061 -> 6,8061."""
+    return str(valor).replace(".", ",") if valor not in (None, "") else ""

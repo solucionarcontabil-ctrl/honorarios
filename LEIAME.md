@@ -119,6 +119,37 @@ Em **⚙ Configurações**, preencha o nome do escritório, a chave PIX, a multa
 O Asaas cobra uma taxa por boleto ou PIX recebido (consulte a tabela atual). Se preferir não pagar
 taxa, use só o **PIX na sua chave**: o sistema gera o QR Code e o copia-e-cola com o valor certo.
 
+### Módulo 7 — Contábil
+
+| Tela | Para quê |
+|---|---|
+| **Plano de contas** | Por cliente, criado a partir de um **plano padrão para PMEs** (1 Ativo, 2 Passivo/PL, 3 Receitas, 4 Custos e despesas), com natureza no padrão da ECD, grupo da DRE, "uso automático" (contas que as rotinas usam) e campo para o **código do plano referencial da RFB** |
+| **Lançamentos** | Partidas dobradas com várias partidas, históricos padrão, conta pelo código reduzido, total de débito × crédito na tela. Numeração sequencial por cliente |
+| **Extrato (OFX)** | Importa o extrato do banco sem duplicar e sugere a contrapartida por **regras** ("descrição contém TARIFA → despesas bancárias"). Você confere e contabiliza em lote; dá para criar regra na própria linha |
+| **Notas fiscais** | Gera lançamentos a partir da Central de XMLs: vendas/serviços → D Clientes / C Receita; compras → D Estoque (ou Custo) / C Fornecedores. Só entram CFOPs de venda/compra (devoluções, remessas, transferências, ativo e uso e consumo ficam de fora) |
+| **Relatórios** | Balancete (com níveis e Excel), Razão, Diário, DRE e Balanço Patrimonial, todos prontos para imprimir |
+| **Fechamento** | Fecha o período (depois disso **nada é alterado nem excluído**: corrige-se por estorno), encerra o exercício (zera o resultado contra a ARE e transfere para lucros ou prejuízos acumulados) e permite reabertura excepcional (só administrador, com motivo) |
+| **Auditoria** | Registro permanente de inclusões, alterações (com antes e depois), exclusões, estornos, fechamentos e reaberturas, com usuário, data/hora e IP |
+
+Segue a **NBC ITG 2000** (escrituração em partidas dobradas, ordem cronológica, sem rasuras, correção por estorno).
+Lançamentos não aparecem na administração avançada de propósito: toda mudança passa pelas regras e pela auditoria.
+
+### Módulo 8 — Fiscal
+
+| Tela | Para quê |
+|---|---|
+| **Receitas e perfil** | Receita bruta mensal por anexo (Simples) ou por atividade (Presumido), montada **a partir das notas** com um clique ou digitada. A folha de 12 meses alimenta o fator R |
+| **Simples Nacional** | **RBT12**, alíquota efetiva pelas tabelas da **LC 123/2006 (redação da LC 155/2016)**, **fator R** (Anexo III ou V), **início de atividade** (RBT12 proporcional, Res. CGSN 140/2018), alertas de sublimite e limite, e memória de cálculo linha a linha |
+| **Lucro Presumido** | PIS (0,65%) e COFINS (3%) cumulativos e ISS mensais; **IRPJ** (15% + adicional de 10% acima de R$ 60 mil/trimestre) e **CSLL** (9%) trimestrais, com presunção por atividade, outras receitas, retenções, meses de atividade e quotas |
+| **Resumo por CFOP** | Saídas e entradas por CFOP com ICMS, ST, IPI, PIS/COFINS, ISS e **IBS/CBS** (Reforma Tributária: em 2026 o destaque é informativo) |
+| **Tabelas usadas** | Mostra todas as tabelas e percentuais aplicados, para conferência |
+
+Cada apuração é **salva com a memória de cálculo** e pode ser marcada como **conferida** (quem e quando).
+É um cálculo de conferência: a apuração oficial continua no PGDAS-D (Simples) e na DCTFWeb/Sicalc (Presumido).
+
+**Fica para a etapa 2:** geração dos arquivos ECD, ECF, EFD ICMS/IPI e EFD-Contribuições (validação no PVA),
+partilha do DAS por tributo, segregação de ST/monofásicos no Simples, Lucro Real, apuração completa de ICMS (ST, DIFAL, CIAP).
+
 ## Avisos automáticos por e-mail
 
 O sistema manda sozinho:

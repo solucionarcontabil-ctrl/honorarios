@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Diário — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+{% include "contabil/_periodo.html" %}
+<h6>LIVRO DIÁRIO — {{ cliente.nome }} — {{ de|date:"d/m/Y" }} a {{ ate|date:"d/m/Y" }}</h6>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Data</th><th>Nº</th><th>Conta</th><th>Histórico</th><th class="text-end">Débito</th><th class="text-end">Crédito</th></tr></thead>
+  <tbody>{% for l in lancamentos %}{% for p in l.partidas.all %}<tr class="{% if forloop.first %}border-top{% endif %}">
+    <td>{% if forloop.first %}{{ l.data|date:"d/m/Y" }}{% endif %}</td><td>{% if forloop.first %}{{ l.numero }}{% endif %}</td>
+    <td class="small">{{ p.conta.codigo }} {{ p.conta.nome }}</td><td class="small">{% if forloop.first %}{{ l.historico }}{% endif %}{% if p.complemento %} {{ p.complemento }}{% endif %}</td>
+    <td class="text-end">{% if p.tipo == 'D' %}{{ p.valor|brl }}{% endif %}</td><td class="text-end">{% if p.tipo == 'C' %}{{ p.valor|brl }}{% endif %}</td></tr>{% endfor %}
+  {% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Sem lançamentos.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

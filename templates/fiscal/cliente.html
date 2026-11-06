@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Fiscal — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "fiscal/_menu.html" %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card shadow-sm mb-3"><div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2"><b>Receita bruta mensal {% if simples %}por anexo{% else %}por atividade{% endif %}</b>
+      <form method="post" action="{% url 'fiscal_importar' c.pk %}" class="d-flex gap-1">{% csrf_token %}<input type="month" name="competencia" value="{{ grade.11.mes|date:'Y-m' }}" class="form-control form-control-sm" style="width:150px"><button class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-filetype-xml"></i> Montar pelas notas</button></form></div>
+    <form method="post">{% csrf_token %}<input type="hidden" name="parte" value="receitas">
+    <div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+      <thead class="table-light"><tr><th>Mês</th>{% for t in tipos %}<th class="small">{{ t.1 }}</th>{% endfor %}{% if simples %}<th class="small">Folha (fator R)</th>{% endif %}<th class="text-end">Total</th></tr></thead>
+      <tbody>{% for g in grade %}<tr>
+        <td class="text-nowrap">{{ g.mes|date:"m/Y" }}</td>
+        {% for tipo, r in g.celulas %}<td><input name="r__{{ g.mes|date:'Y-m' }}__{{ tipo }}" value="{% if r %}{{ r.valor|floatformat:2 }}{% endif %}" class="form-control form-control-sm text-end {% if r.origem == 'XML' %}bg-success-subtle{% endif %}" inputmode="decimal" title="{% if r %}{{ r.get_origem_display }}{% endif %}"></td>{% endfor %}
+        {% if simples %}<td><input name="f__{{ g.mes|date:'Y-m' }}" value="{% if g.folha is not None %}{{ g.folha|floatformat:2 }}{% endif %}" class="form-control form-control-sm text-end" inputmode="decimal"></td>{% endif %}
+        <td class="text-end small">{{ g.total|brl }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <div class="card-body pt-2"><button class="btn btn-primary btn-sm">Salvar receitas</button> <span class="small text-muted ms-2">Verde = veio das notas fiscais. Ao digitar, o valor passa a ser manual e não é mais sobrescrito.</span></div>
+    </form></div>
+    {% if apuracoes %}<div class="card shadow-sm"><div class="card-header bg-white"><b>Apurações salvas</b></div><table class="table table-sm mb-0 small">
+      {% for a in apuracoes %}<tr><td>{{ a.competencia|date:"m/Y" }}</td><td>{{ a.get_tipo_display }}</td><td class="text-end">{{ a.total|brl }}</td>
+        <td>{% if a.conferida %}<span class="text-success"><i class="bi bi-check-circle"></i> conferida por {{ a.conferida_por }}</span>{% else %}<span class="text-warning">a conferir</span>{% endif %}</td>
+        <td><a href="{% if a.tipo == 'SIMPLES' %}{% url 'fiscal_simples' c.pk %}{% else %}{% url 'fiscal_presumido' c.pk %}{% endif %}?competencia={{ a.competencia|date:'Y-m' }}">abrir</a></td></tr>{% endfor %}</table></div>{% endif %}
+  </div>
+  <div class="col-xl-4"><div class="card shadow-sm"><div class="card-header bg-white"><b>Perfil fiscal</b></div><div class="card-body">
+    <form method="post">{% csrf_token %}<input type="hidden" name="parte" value="perfil">
+      {% for campo in form %}{% if simples and campo.name in "atividade_mercadorias atividade_servicos presuncao_irpj presuncao_csll aliquota_iss" %}{{ campo.as_hidden }}{% elif not simples and campo.name in "anexo_mercadorias anexo_servicos" %}{{ campo.as_hidden }}{% else %}
+        <div class="mb-2"><label class="form-label small fw-semibold">{{ campo.label|capfirst }}</label>{{ campo }}{% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}{% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>{% endif %}{% endfor %}
+      <button class="btn btn-sm btn-primary">Salvar perfil</button></form>
+  </div></div></div>
+</div>
+{% endblock %}

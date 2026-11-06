@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Fiscal{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0"><i class="bi bi-percent"></i> Fiscal</h4>
+  <a href="{% url 'fiscal_tabelas' %}" class="btn btn-outline-secondary btn-sm">Tabelas usadas</a></div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+  <thead class="table-light"><tr><th>Cliente</th><th>Regime</th><th>Última apuração</th></tr></thead>
+  <tbody>{% for c in clientes %}<tr onclick="location='{% url 'fiscal_cliente' c.pk %}'" style="cursor:pointer"><td class="fw-semibold">{{ c }}</td><td>{{ c.get_regime_display }}</td><td>{{ c.ultima|date:"m/Y"|default:"—" }}</td></tr>
+  {% empty %}<tr><td colspan="3" class="text-center text-muted py-4">Nenhum cliente do Simples ou Presumido.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

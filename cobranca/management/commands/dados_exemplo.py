@@ -97,4 +97,46 @@ class Command(BaseCommand):
         for doc, u, minutos, ativ in horas:
             Apontamento.objects.create(usuario=u, cliente=Cliente.objects.get(documento=doc), data=mes_ant.replace(day=10),
                                        minutos=minutos, atividade=ativ, descricao="Rotina do mês")
+        # contábil e fiscal
+        from datetime import date as _d
+
+        from contabil import plano_padrao, rotinas
+        from contabil import services as cont
+        from contabil.models import RegraExtrato
+        from contabil.services import PartidaDados as P
+        from fiscal import services as fisc
+        from fiscal.models import FolhaMensal, ReceitaMensal
+        plano_padrao.aplicar(padaria)
+        cc = lambda cod: padaria.contas.get(codigo=cod)  # noqa: E731
+        cont.lancar(padaria, _d(2026, 1, 2), "Integralização de capital", [P(cc("1.1.01.002"), "D", Decimal("50000")),
+                    P(cc("2.3.01.001"), "C", Decimal("50000"))], admin)
+        cont.lancar(padaria, _d(2026, 10, 5), "Aluguel de outubro", [P(cc("4.2.02.001"), "D", Decimal("2800")),
+                    P(cc("1.1.01.002"), "C", Decimal("2800"))], admin)
+        cont.lancar(padaria, _d(2026, 10, 10), "Folha de setembro", [P(cc("4.2.01.001"), "D", Decimal("4200")),
+                    P(cc("4.2.01.002"), "D", Decimal("1518")), P(cc("1.1.01.002"), "C", Decimal("5718"))], admin)
+        RegraExtrato.objects.create(cliente=padaria, texto="TARIFA", sentido="SAIDA", conta=cc("4.3.01.001"))
+        RegraExtrato.objects.create(cliente=padaria, texto="ENERGIA", sentido="SAIDA", conta=cc("4.2.02.002"))
+        ofx = b"""<OFX><BANKTRANLIST>
+<STMTTRN><DTPOSTED>20261003<TRNAMT>1000.00<FITID>X1<MEMO>PIX RECEBIDO MERCADINHO BOM PRECO
+<STMTTRN><DTPOSTED>20261006<TRNAMT>-49.90<FITID>X2<MEMO>TARIFA PACOTE SERVICOS
+<STMTTRN><DTPOSTED>20261012<TRNAMT>-612.33<FITID>X3<MEMO>DEBITO AUTOMATICO ENERGIA ENEL
+<STMTTRN><DTPOSTED>20261015<TRNAMT>-2500.00<FITID>X4<MEMO>PAGAMENTO BOLETO MOINHO FORNECEDOR
+</BANKTRANLIST></OFX>"""
+        rotinas.importar_ofx(padaria, cc("1.1.01.002"), ofx)
+        rotinas.contabilizar_itens(padaria, list(padaria.itens_extrato.filter(fitid__in=["X2"])), admin)
+        rotinas.contabilizar_notas(padaria, _d(2026, 10, 1), admin)
+        pf = fisc.perfil(padaria)
+        pf.anexo_mercadorias = "SN_I"
+        pf.save()
+        for i in range(1, 13):
+            m = fisc.somar_meses(_d(2026, 10, 1), -i)
+            ReceitaMensal.objects.get_or_create(cliente=padaria, competencia=m, tipo="SN_I", defaults={"valor": Decimal("38000") + i * 750})
+            FolhaMensal.objects.get_or_create(cliente=padaria, competencia=m, defaults={"valor": Decimal("6500")})
+        ReceitaMensal.objects.get_or_create(cliente=padaria, competencia=_d(2026, 10, 1), tipo="SN_I", defaults={"valor": Decimal("41250")})
+        clinica = Cliente.objects.get(documento="45723174000110")
+        clinica.regime = "PRESUMIDO"
+        clinica.save()
+        for m in (7, 8, 9, 10):
+            ReceitaMensal.objects.get_or_create(cliente=clinica, competencia=_d(2026, m, 1), tipo="LP_SERVICOS",
+                                                defaults={"valor": Decimal("95000") + m * 1000})
         self.stdout.write(self.style.SUCCESS("Dados de exemplo criados."))

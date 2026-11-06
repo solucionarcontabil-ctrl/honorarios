@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load moeda contabil %}
+{% block titulo %}Razão — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<form class="row g-2 mb-3 align-items-end no-print">
+  <div class="col-md-4"><label class="form-label small">Conta</label><input name="conta" list="lista-contas" value="{% if conta %}{{ conta.reduzido }} - {{ conta.codigo }} {{ conta.nome }}{% endif %}" class="form-control form-control-sm" required></div>
+  <div class="col-auto"><label class="form-label small">De</label><input type="date" name="de" value="{{ de|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até</label><input type="date" name="ate" value="{{ ate|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Ver</button> <button type="button" onclick="print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button></div>
+</form>
+<datalist id="lista-contas">{% for c in contas %}<option value="{{ c.reduzido }} - {{ c.codigo }} {{ c.nome }}">{% endfor %}</datalist>
+{% if dados %}
+<h6>RAZÃO — {{ conta.codigo }} {{ conta.nome }} <small class="text-muted">{{ de|date:"d/m/Y" }} a {{ ate|date:"d/m/Y" }}</small></h6>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Data</th><th>Lanç.</th><th>Histórico</th><th>Contrapartida</th><th class="text-end">Débito</th><th class="text-end">Crédito</th><th class="text-end">Saldo</th></tr></thead>
+  <tbody><tr class="table-light"><td colspan="6">Saldo anterior</td><td class="text-end">{{ dados.0|dc }}</td></tr>
+  {% for l in dados.1 %}<tr><td>{{ l.p.lancamento.data|date:"d/m/Y" }}</td><td><a href="{% url 'contabil_lancamento' cliente.pk l.p.lancamento.pk %}">{{ l.p.lancamento.numero }}</a></td>
+    <td class="small">{{ l.p.lancamento.historico }}{% if l.p.complemento %} — {{ l.p.complemento }}{% endif %}</td><td class="small">{{ l.contra.reduzido|default:"diversos" }}</td>
+    <td class="text-end">{% if l.p.tipo == 'D' %}{{ l.p.valor|brl }}{% endif %}</td><td class="text-end">{% if l.p.tipo == 'C' %}{{ l.p.valor|brl }}{% endif %}</td><td class="text-end text-nowrap">{{ l.saldo|dc }}</td></tr>{% endfor %}</tbody>
+  <tfoot class="table-light fw-semibold"><tr><td colspan="6" class="text-end">Saldo final</td><td class="text-end">{{ dados.2|dc }}</td></tr></tfoot>
+</table></div></div>
+{% endif %}
+{% endblock %}

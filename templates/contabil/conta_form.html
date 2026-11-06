@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Conta — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<div class="card shadow-sm" style="max-width:820px"><div class="card-body">
+<form method="post">{% csrf_token %}
+  {% if usada %}<div class="alert alert-info small">Esta conta já tem lançamentos: código, natureza e tipo ficam bloqueados para preservar a escrituração.</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-md-4"><label class="form-label small fw-semibold">Código (classificação)</label><input name="codigo" value="{{ conta.codigo }}" class="form-control" {% if usada %}disabled{% endif %} placeholder="1.1.01.004"></div>
+    <div class="col-md-8"><label class="form-label small fw-semibold">Nome</label><input name="nome" value="{{ conta.nome }}" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label small fw-semibold">Natureza</label><select name="natureza" class="form-select" {% if usada %}disabled{% endif %}>{% for v, n in naturezas %}<option value="{{ v }}" {% if conta.natureza == v %}selected{% endif %}>{{ v }} — {{ n }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label small fw-semibold">Grupo na DRE (contas de resultado)</label><select name="grupo_dre" class="form-select">{% for v, n in grupos %}<option value="{{ v }}" {% if conta.grupo_dre == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label small fw-semibold">Uso automático</label><select name="papel" class="form-select">{% for v, n in papeis %}<option value="{{ v }}" {% if conta.papel == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label small fw-semibold">Código no plano referencial (RFB)</label><input name="codigo_referencial" value="{{ conta.codigo_referencial }}" class="form-control"></div>
+    <div class="col-md-4 d-flex align-items-end"><div class="form-check"><input type="checkbox" name="sintetica" id="sint" class="form-check-input" {% if conta.sintetica %}checked{% endif %} {% if usada %}disabled{% endif %}><label for="sint" class="form-check-label">Sintética (agrupadora)</label></div></div>
+    <div class="col-md-4 d-flex align-items-end"><div class="form-check"><input type="checkbox" name="ativa" id="ativa" class="form-check-input" {% if conta.ativa or not conta.pk %}checked{% endif %}><label for="ativa" class="form-check-label">Ativa</label></div></div>
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary">Salvar</button><a href="{% url 'contabil_plano' cliente.pk %}" class="btn btn-outline-secondary">Voltar</a></div>
+</form></div></div>
+{% endblock %}

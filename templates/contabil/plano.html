@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Plano de contas — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+  <div class="small text-muted">Contas sintéticas (negrito) somam as de baixo; lançamentos só nas analíticas. Contas já usadas não mudam de código, natureza nem tipo.</div>
+  <div class="d-flex gap-2">
+    {% if not contas %}<form method="post">{% csrf_token %}<button name="acao" value="padrao" class="btn btn-primary btn-sm"><i class="bi bi-magic"></i> Criar a partir do plano padrão</button></form>{% endif %}
+    <a href="{% url 'contabil_conta_nova' cliente.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus"></i> Nova conta</a>
+  </div>
+</div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+  <thead class="table-light"><tr><th>Código</th><th>Red.</th><th>Nome</th><th>Natureza</th><th>DRE</th><th>Uso automático</th><th>Ref. RFB</th><th class="text-center">Lanç.</th></tr></thead>
+  <tbody>{% for c in contas %}<tr onclick="location='{% url 'contabil_conta' cliente.pk c.pk %}'" style="cursor:pointer" class="{% if not c.ativa %}text-muted{% endif %}">
+    <td class="{% if c.sintetica %}fw-bold{% endif %}" style="padding-left:{{ c.nivel }}em">{{ c.codigo }}</td><td>{{ c.reduzido }}</td>
+    <td class="{% if c.sintetica %}fw-bold{% endif %}">{{ c.nome }}{% if not c.ativa %} <span class="badge bg-secondary">inativa</span>{% endif %}</td>
+    <td class="small">{{ c.get_natureza_display }}</td><td class="small">{{ c.get_grupo_dre_display|default:"" }}</td>
+    <td class="small">{% if c.papel %}<span class="badge bg-info text-dark">{{ c.get_papel_display }}</span>{% endif %}</td>
+    <td class="small">{{ c.codigo_referencial }}</td><td class="text-center small">{{ c.qtd|default:"" }}</td>
+  </tr>{% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma conta. Use o plano padrão como ponto de partida.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

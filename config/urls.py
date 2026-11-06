@@ -12,5 +12,7 @@ urlpatterns = [
     path("", include("xmls.urls")),
     path("", include("portal.urls")),
     path("", include("rentabilidade.urls")),
+    path("", include("contabil.urls")),
+    path("", include("fiscal.urls")),
     path("", include("cobranca.urls")),
 ]

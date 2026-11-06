@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}DRE — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+{% include "contabil/_periodo.html" %}
+<div class="card shadow-sm" style="max-width:820px"><div class="card-body">
+<h6 class="text-center mb-0">DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO</h6>
+<div class="text-center small mb-3">{{ cliente.nome }} — {{ de|date:"d/m/Y" }} a {{ ate|date:"d/m/Y" }}</div>
+<table class="table table-sm mb-0">
+{% with g=d.grupos det=d.detalhes %}
+  <tr class="fw-semibold"><td>RECEITA BRUTA</td><td class="text-end">{{ g.RECEITA_BRUTA|default:0|brl }}</td></tr>
+  {% for c, v in det.RECEITA_BRUTA %}<tr class="small text-muted"><td class="ps-4">{{ c.nome }}</td><td class="text-end">{{ v|brl }}</td></tr>{% endfor %}
+  <tr><td>(-) Deduções da receita</td><td class="text-end">{{ g.DEDUCOES|default:0|brl }}</td></tr>
+  {% for c, v in det.DEDUCOES %}<tr class="small text-muted"><td class="ps-4">{{ c.nome }}</td><td class="text-end">{{ v|brl }}</td></tr>{% endfor %}
+  <tr class="fw-semibold table-light"><td>RECEITA LÍQUIDA</td><td class="text-end">{{ d.receita_liquida|brl }}</td></tr>
+  <tr><td>(-) Custos</td><td class="text-end">{{ g.CUSTOS|default:0|brl }}</td></tr>
+  <tr class="fw-semibold table-light"><td>LUCRO BRUTO</td><td class="text-end">{{ d.lucro_bruto|brl }}</td></tr>
+  <tr><td>(-) Despesas operacionais</td><td class="text-end">{{ g.DESP_OPERACIONAIS|default:0|brl }}</td></tr>
+  {% for c, v in det.DESP_OPERACIONAIS %}<tr class="small text-muted"><td class="ps-4">{{ c.nome }}</td><td class="text-end">{{ v|brl }}</td></tr>{% endfor %}
+  <tr><td>Receitas financeiras</td><td class="text-end">{{ g.RECEITAS_FINANCEIRAS|default:0|brl }}</td></tr>
+  <tr><td>(-) Despesas financeiras</td><td class="text-end">{{ g.DESP_FINANCEIRAS|default:0|brl }}</td></tr>
+  <tr class="fw-semibold table-light"><td>RESULTADO OPERACIONAL</td><td class="text-end">{{ d.operacional|brl }}</td></tr>
+  <tr><td>Outras receitas</td><td class="text-end">{{ g.OUTRAS_RECEITAS|default:0|brl }}</td></tr>
+  <tr><td>(-) Outras despesas</td><td class="text-end">{{ g.OUTRAS_DESPESAS|default:0|brl }}</td></tr>
+  <tr class="fw-semibold table-light"><td>RESULTADO ANTES DO IRPJ E CSLL</td><td class="text-end">{{ d.antes_ir|brl }}</td></tr>
+  <tr><td>(-) IRPJ e CSLL</td><td class="text-end">{{ g.IRPJ_CSLL|default:0|brl }}</td></tr>
+  <tr class="fw-bold {% if d.liquido < 0 %}table-danger{% else %}table-success{% endif %}"><td>{% if d.liquido < 0 %}PREJUÍZO{% else %}LUCRO{% endif %} LÍQUIDO DO PERÍODO</td><td class="text-end">{{ d.liquido|brl }}</td></tr>
+{% endwith %}
+</table>
+<p class="small text-muted mt-2 mb-0">Valores negativos são reduções do resultado. Os lançamentos de encerramento não entram na DRE.</p>
+</div></div>
+{% endblock %}

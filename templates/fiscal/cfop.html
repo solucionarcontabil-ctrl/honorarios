@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Resumo por CFOP — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "fiscal/_menu.html" %}
+<form class="row g-2 mb-3 align-items-end no-print"><div class="col-auto"><label class="form-label small">Competência</label><input type="month" name="competencia" value="{{ comp|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.submit()"></div></form>
+<div class="row g-3">
+  {% for nome, bloco in r.items %}{% if nome != 'icms_saldo' %}
+  <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>{% if nome == 'saidas' %}Saídas (emitidas){% else %}Entradas (recebidas){% endif %}</b> <small class="text-muted">{{ bloco.qtd }} nota(s) autorizada(s)</small></div>
+    <table class="table table-sm mb-0 small">
+      <thead class="table-light"><tr><th>CFOP</th><th class="text-end">Valor dos produtos</th></tr></thead>
+      {% for cf, v in bloco.cfops %}<tr><td>{{ cf }}</td><td class="text-end">{{ v|brl }}</td></tr>{% empty %}<tr><td colspan="2" class="text-muted">—</td></tr>{% endfor %}
+      <tr class="table-light"><th>Valor total das notas</th><td class="text-end fw-semibold">{{ bloco.totais.valor_total|brl }}</td></tr>
+      <tr><th>ICMS</th><td class="text-end">{{ bloco.totais.valor_icms|brl }}</td></tr><tr><th>ICMS-ST</th><td class="text-end">{{ bloco.totais.valor_icms_st|brl }}</td></tr>
+      <tr><th>IPI</th><td class="text-end">{{ bloco.totais.valor_ipi|brl }}</td></tr><tr><th>PIS / COFINS destacados</th><td class="text-end">{{ bloco.totais.valor_pis|brl }} / {{ bloco.totais.valor_cofins|brl }}</td></tr>
+      <tr><th>ISS (NFS-e)</th><td class="text-end">{{ bloco.totais.valor_iss|brl }}</td></tr>
+      <tr><th>IBS / CBS <small class="text-muted fw-normal">(Reforma — 2026 informativo)</small></th><td class="text-end">{{ bloco.totais.valor_ibs|brl }} / {{ bloco.totais.valor_cbs|brl }}</td></tr>
+    </table></div></div>
+  {% endif %}{% endfor %}
+</div>
+<div class="alert alert-light border small mt-3">ICMS destacado nas saídas − ICMS das entradas = <b>{{ r.icms_saldo|brl }}</b>. É só uma <b>conferência</b>: o crédito real depende da natureza de cada entrada (uso e consumo e ativo não geram crédito comum, há o CIAP, a ST etc.) e é apurado no livro/SPED Fiscal.</div>
+{% endblock %}

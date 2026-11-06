@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "xmls",
     "portal",
     "rentabilidade",
+    "contabil",
+    "fiscal",
 ]
 
 MIDDLEWARE = [

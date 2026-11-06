@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Tabelas fiscais{% endblock %}
+{% block conteudo %}
+<h4 class="mb-2">Tabelas usadas nos cálculos</h4>
+<p class="small text-muted">Simples Nacional: Anexos I a V da LC 123/2006, na redação da LC 155/2016. Lucro Presumido: Leis 9.249/1995, 9.430/1996 e 9.718/1998. <b>Confira periodicamente se houve mudança legal.</b> Os percentuais de presunção podem ser ajustados por cliente no perfil fiscal.</p>
+<div class="row g-3">{% for anexo, faixas in anexos.items %}
+  <div class="col-md-6 col-xl-4"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>Anexo {{ anexo }}</b></div><table class="table table-sm mb-0 small">
+    <thead class="table-light"><tr><th>Faixa</th><th class="text-end">RBT12 até</th><th class="text-end">Alíquota</th><th class="text-end">Parcela a deduzir</th></tr></thead>
+    {% for lim, aliq, pd in faixas %}<tr><td>{{ forloop.counter }}ª</td><td class="text-end">{{ lim|brl }}</td><td class="text-end">{{ aliq|virgula }}%</td><td class="text-end">{{ pd|brl }}</td></tr>{% endfor %}
+  </table></div></div>{% endfor %}
+  <div class="col-md-6 col-xl-4"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>Lucro Presumido — presunção</b></div><table class="table table-sm mb-0 small">
+    <thead class="table-light"><tr><th>Atividade</th><th class="text-end">IRPJ</th><th class="text-end">CSLL</th></tr></thead>
+    {% for k, v in presumido.items %}<tr><td>{{ v.0 }}</td><td class="text-end">{{ v.1|virgula }}%</td><td class="text-end">{{ v.2|virgula }}%</td></tr>{% endfor %}
+  </table><div class="card-body small">IRPJ 15% + adicional de 10% sobre a base que exceder R$ 20.000/mês (R$ 60.000/trimestre). CSLL 9%. PIS 0,65% e COFINS 3% (cumulativos). DARFs: IRPJ {{ T.DARF.IRPJ }}, CSLL {{ T.DARF.CSLL }}, PIS {{ T.DARF.PIS }}, COFINS {{ T.DARF.COFINS }}.</div></div></div>
+</div>
+{% endblock %}

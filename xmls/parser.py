@@ -98,7 +98,8 @@ def _doc_base(**kw):
         "emit_doc": "", "emit_nome": "", "emit_uf": "", "dest_doc": "", "dest_nome": "",
         "tipo_operacao": "SAIDA", "natureza": "", "valor_total": Decimal("0"), "valor_icms": Decimal("0"),
         "valor_icms_st": Decimal("0"), "valor_ipi": Decimal("0"), "valor_pis": Decimal("0"),
-        "valor_cofins": Decimal("0"), "valor_iss": Decimal("0"), "cfops": {}, "situacao": "AUTORIZADA",
+        "valor_cofins": Decimal("0"), "valor_iss": Decimal("0"), "valor_ibs": Decimal("0"), "valor_cbs": Decimal("0"),
+        "cfops": {}, "situacao": "AUTORIZADA",
     }
     base.update(kw)
     return base
@@ -129,7 +130,16 @@ def _nfe(raiz):
         valor_total=dec(texto(tot, "vNF")), valor_icms=dec(texto(tot, "vICMS")), valor_icms_st=dec(texto(tot, "vST")),
         valor_ipi=dec(texto(tot, "vIPI")), valor_pis=dec(texto(tot, "vPIS")), valor_cofins=dec(texto(tot, "vCOFINS")),
         cfops={k: str(v) for k, v in cfops.items()}, situacao=situacao,
+        **_ibs_cbs(achar(inf, "total")),
     )
+
+
+def _ibs_cbs(total):
+    """Totais de IBS/CBS (grupo IBSCBSTot do leiaute da Reforma Tributária, NT 2025.002)."""
+    grupo = achar(total, "//IBSCBSTot") if total is not None else None
+    if grupo is None:
+        return {}
+    return {"valor_ibs": dec(texto(grupo, "//vIBS")), "valor_cbs": dec(texto(grupo, "//vCBS"))}
 
 
 # --------------------------------------------------------------------- CT-e

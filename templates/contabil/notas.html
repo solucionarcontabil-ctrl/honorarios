@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Notas → lançamentos — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<form class="row g-2 mb-3 align-items-end"><div class="col-auto"><label class="form-label small">Competência</label><input type="month" name="competencia" value="{{ competencia|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.submit()"></div></form>
+<div class="alert alert-light border small">
+  Lança cada nota autorizada da Central de XMLs: <b>vendas/serviços</b> → D Clientes / C Receita; <b>compras (NF-e recebidas)</b> → D Estoque (ou Custo) / C Fornecedores.
+  Só entram os CFOPs de venda/compra; ficam de fora devoluções, remessas, transferências, bonificações, ativo e uso e consumo. Serviços tomados e fretes: lance manualmente.
+  <b>Confira a regra com a operação do cliente.</b>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Vendas/serviços</div><div class="valor">{{ total_saidas|brl }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Compras</div><div class="valor">{{ total_entradas|brl }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Ainda não contabilizadas</div><div class="valor">{{ qtd_novas }}</div></div></div></div>
+</div>
+<div class="card shadow-sm mb-3"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Tipo</th><th>Nota</th><th>Data</th><th>Contraparte</th><th>CFOPs</th><th class="text-end">Valor considerado</th><th class="text-end">Total da nota</th><th></th></tr></thead>
+  <tbody>{% for i in itens %}<tr class="{% if i.ja %}text-muted{% endif %}">
+    <td>{% if i.tipo == 'SAIDA' %}<span class="badge bg-success-subtle text-success">venda</span>{% else %}<span class="badge bg-primary-subtle text-primary">compra</span>{% endif %}</td>
+    <td>{{ i.doc.get_modelo_display }} {{ i.doc.numero }}</td><td>{{ i.doc.emissao|date:"d/m/Y" }}</td>
+    <td class="small">{% if i.tipo == 'SAIDA' %}{{ i.doc.dest_nome|default:"consumidor" }}{% else %}{{ i.doc.emit_nome }}{% endif %}</td>
+    <td class="small">{{ i.doc.lista_cfops }}</td><td class="text-end">{{ i.valor|brl }}</td><td class="text-end small text-muted">{{ i.doc.valor_total|brl }}</td>
+    <td class="small">{% if i.ja %}<i class="bi bi-check2"></i> lançada{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma nota operacional nesta competência.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% if qtd_novas %}<form method="post" class="d-flex gap-3 align-items-center">{% csrf_token %}<input type="hidden" name="competencia" value="{{ competencia|date:'Y-m' }}">
+  <div class="form-check"><input type="checkbox" name="estoque" id="est" class="form-check-input" checked><label for="est" class="form-check-label small">Compras vão para estoque (desmarque se o cliente lança direto no custo)</label></div>
+  <button class="btn btn-primary"><i class="bi bi-lightning"></i> Gerar {{ qtd_novas }} lançamento(s)</button></form>{% endif %}
+{% endblock %}

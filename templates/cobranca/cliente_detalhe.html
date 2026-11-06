@@ -15,6 +15,8 @@
         <li><a class="dropdown-item" href="{% url 'acesso_novo' %}?cliente={{ cliente.pk }}">Criar acesso ao portal</a></li>
       </ul>
     </div>
+    <a href="{% url 'contabil_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-journal-text"></i> Contábil</a>
+    <a href="{% url 'fiscal_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-percent"></i> Fiscal</a>
     <a href="{% url 'rentabilidade_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Rentabilidade</a>
     <a href="{% url 'xml_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-filetype-xml"></i> Notas fiscais</a>
     <a href="{% url 'xml_faturamento' cliente.pk %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-bar-chart"></i> Faturamento</a>

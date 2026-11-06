@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Extrato — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<div class="card shadow-sm mb-3"><div class="card-body">
+<form method="post" enctype="multipart/form-data" class="row g-2 align-items-end">{% csrf_token %}<input type="hidden" name="acao" value="importar">
+  <div class="col-md-4"><label class="form-label small fw-semibold">Conta bancária no plano</label><select name="conta_banco" class="form-select form-select-sm">{% for b in bancos %}<option value="{{ b.pk }}">{{ b.reduzido }} - {{ b.codigo }} {{ b.nome }}</option>{% empty %}<option value="">Crie a conta do banco no plano (grupo 1.1.01)</option>{% endfor %}</select></div>
+  <div class="col-md-5"><label class="form-label small fw-semibold">Extrato OFX (baixado do internet banking)</label><input type="file" name="arquivo" accept=".ofx,.OFX" class="form-control form-control-sm"></div>
+  <div class="col-md-3"><button class="btn btn-primary btn-sm w-100"><i class="bi bi-upload"></i> Importar</button></div>
+</form>
+<div class="form-text">Movimentos repetidos (mesmo identificador do banco) são ignorados. As regras abaixo sugerem a contrapartida sozinhas.</div>
+</div></div>
+<ul class="nav nav-pills mb-2 small">
+  <li class="nav-item"><a class="nav-link {% if status == 'PENDENTE' %}active{% endif %}" href="?status=PENDENTE">Pendentes</a></li>
+  <li class="nav-item"><a class="nav-link {% if status == 'CONTABILIZADO' %}active{% endif %}" href="?status=CONTABILIZADO">Contabilizados</a></li>
+  <li class="nav-item"><a class="nav-link {% if status == 'IGNORADO' %}active{% endif %}" href="?status=IGNORADO">Ignorados</a></li>
+  <li class="nav-item"><a class="nav-link {% if status == 'TODOS' %}active{% endif %}" href="?status=TODOS">Todos</a></li>
+</ul>
+<form method="post">{% csrf_token %}
+<datalist id="lista-contas">{% for c in contas %}<option value="{{ c.reduzido }} - {{ c.codigo }} {{ c.nome }}">{% endfor %}</datalist>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+  <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" onclick="document.querySelectorAll('.sel').forEach(e=>e.checked=this.checked)"></th><th>Data</th><th>Descrição</th><th class="text-end">Valor</th><th style="width:30%">Contrapartida</th><th>Criar regra com o texto</th><th></th></tr></thead>
+  <tbody>{% for i in itens %}<tr class="{% if i.status != 'PENDENTE' %}text-muted{% endif %}">
+    <td>{% if i.status == 'PENDENTE' %}<input type="checkbox" class="form-check-input sel" name="ids" value="{{ i.pk }}" {% if i.contrapartida %}checked{% endif %}>{% endif %}</td>
+    <td class="text-nowrap">{{ i.data|date:"d/m/Y" }}</td><td class="small">{{ i.descricao }}<br><span class="text-muted">{{ i.conta_banco.nome }}</span></td>
+    <td class="text-end text-nowrap {% if i.valor < 0 %}text-danger{% else %}text-success{% endif %}">{{ i.valor|brl }}</td>
+    <td>{% if i.status == 'PENDENTE' %}<input name="cp_{{ i.pk }}" value="{% if i.contrapartida %}{{ i.contrapartida.reduzido }} - {{ i.contrapartida.codigo }} {{ i.contrapartida.nome }}{% endif %}" list="lista-contas" class="form-control form-control-sm">{% else %}{{ i.contrapartida|default:"—" }}{% endif %}</td>
+    <td>{% if i.status == 'PENDENTE' %}<input name="regra_{{ i.pk }}" class="form-control form-control-sm" placeholder="ex.: TARIFA">{% endif %}</td>
+    <td class="small">{% if i.lancamento %}<a href="{% url 'contabil_lancamento' cliente.pk i.lancamento.pk %}">nº {{ i.lancamento.numero }}</a>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum movimento.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% if status == 'PENDENTE' and itens %}<div class="d-flex flex-wrap gap-2 mt-2">
+  <button name="acao" value="contabilizar" class="btn btn-success btn-sm"><i class="bi bi-check2-all"></i> Contabilizar selecionados</button>
+  <button name="acao" value="salvar" class="btn btn-outline-primary btn-sm">Só salvar contrapartidas/regras</button>
+  <button name="acao" value="ignorar" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Ignorar os selecionados?')">Ignorar selecionados</button>
+</div>{% endif %}
+</form>
+{% if regras %}<h6 class="mt-4">Regras de contrapartida</h6><div class="card shadow-sm"><table class="table table-sm mb-0 small">
+  {% for r in regras %}<tr><td>Descrição contém <b>{{ r.texto }}</b></td><td>{{ r.get_sentido_display }}</td><td>→ {{ r.conta }}</td>
+    <td class="text-end"><form method="post" action="{% url 'contabil_regra_excluir' cliente.pk r.pk %}">{% csrf_token %}<button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button></form></td></tr>{% endfor %}
+</table></div>{% endif %}
+{% endblock %}

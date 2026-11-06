@@ -1,0 +1,2 @@
+{% load moeda %}{% if ap %}<div class="small mb-2">{% if ap.conferida %}<span class="badge bg-success"><i class="bi bi-check-circle"></i> Conferida por {{ ap.conferida_por }} em {{ ap.conferida_em|date:"d/m/Y H:i" }}</span>{% else %}<span class="badge bg-warning text-dark">Salva, aguardando conferência</span>{% endif %}
+  <span class="text-muted">· calculada por {{ ap.calculada_por }} em {{ ap.calculada_em|date:"d/m/Y H:i" }} · total salvo {{ ap.total|brl }}</span></div>{% endif %}

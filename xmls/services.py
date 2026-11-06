@@ -134,7 +134,8 @@ def importar(arquivos, usuario=None):
                             tipo_operacao=d["tipo_operacao"], natureza=d["natureza"][:120], situacao=d["situacao"],
                             valor_total=d["valor_total"], valor_icms=d["valor_icms"], valor_icms_st=d["valor_icms_st"],
                             valor_ipi=d["valor_ipi"], valor_pis=d["valor_pis"], valor_cofins=d["valor_cofins"],
-                            valor_iss=d["valor_iss"], cfops=d["cfops"], nome_arquivo=nome[:200], xml_gz=gz, lote=lote,
+                            valor_iss=d["valor_iss"], valor_ibs=d["valor_ibs"], valor_cbs=d["valor_cbs"],
+                            cfops=d["cfops"], nome_arquivo=nome[:200], xml_gz=gz, lote=lote,
                         )
                     lote.novos += 1
                     chaves_novas.append(d["chave"])

@@ -56,6 +56,9 @@ class Documento(models.Model):
     valor_pis = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     valor_cofins = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     valor_iss = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    # Reforma Tributária (EC 132/2023, LC 214/2025): em 2026 o destaque é informativo/teste
+    valor_ibs = models.DecimalField("IBS", max_digits=15, decimal_places=2, default=0)
+    valor_cbs = models.DecimalField("CBS", max_digits=15, decimal_places=2, default=0)
     cfops = models.JSONField(default=dict, blank=True, help_text="{CFOP: valor dos produtos}")
 
     nome_arquivo = models.CharField(max_length=200, blank=True)

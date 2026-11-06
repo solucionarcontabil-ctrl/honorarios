@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Simples — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "fiscal/_menu.html" %}
+<form class="row g-2 mb-3 align-items-end no-print"><div class="col-auto"><label class="form-label small">Competência (período de apuração)</label><input type="month" name="competencia" value="{{ comp|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.submit()"></div>
+  <div class="col-auto"><button type="button" onclick="print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button></div></form>
+{% for a in r.alertas %}<div class="alert {% if forloop.last %}alert-light border{% else %}alert-warning{% endif %} small py-2"><i class="bi bi-exclamation-triangle"></i> {{ a }}</div>{% endfor %}
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">RBT12{% if r.proporcional %} (proporcional — início de atividade){% endif %}</div><div class="valor">{{ r.rbt12|brl }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Fator R</div><div class="valor">{% if r.fator_r %}{% widthratio r.fator_r 1 100 %}%{% else %}—{% endif %}</div>{% if r.folha12 %}<small class="text-muted">folha 12m {{ r.folha12|brl }}</small>{% endif %}</div></div></div>
+  <div class="col-md-4"><div class="card card-kpi shadow-sm border-primary"><div class="card-body"><div class="small text-muted">DAS estimado {{ comp|date:"m/Y" }}</div><div class="valor text-primary">{{ r.total|brl }}</div></div></div></div>
+</div>
+<div class="card shadow-sm mb-3"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Receita</th><th class="text-end">Valor</th><th>Anexo / faixa</th><th class="text-end">Alíq. nominal</th><th class="text-end">Parcela a deduzir</th><th class="text-end">Alíq. efetiva</th><th class="text-end">DAS</th></tr></thead>
+  <tbody>{% for l in r.linhas %}<tr><td>{{ nomes|get_item:l.tipo|default:l.tipo }}{% if l.obs %}<br><small class="text-muted">{{ l.obs }}</small>{% endif %}</td><td class="text-end">{{ l.receita|brl }}</td><td>{{ l.anexo }} / {{ l.faixa }}ª</td>
+    <td class="text-end">{{ l.aliquota_nominal|virgula }}%</td><td class="text-end">{{ l.parcela_deduzir|brl }}</td><td class="text-end">{{ l.aliquota_efetiva|virgula }}%</td><td class="text-end fw-semibold">{{ l.valor|brl }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="text-center text-muted py-3">Sem receita no mês. <a href="{% url 'fiscal_cliente' c.pk %}">Informe ou monte pelas notas</a>.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<div class="card shadow-sm mb-3"><div class="card-header bg-white"><b>Memória de cálculo</b></div><ul class="list-group list-group-flush small">{% for m in r.memoria %}<li class="list-group-item">{{ m }}</li>{% endfor %}</ul></div>
+{% include "fiscal/_apuracao_status.html" %}
+{% if diferente %}<div class="alert alert-info small">Os dados mudaram desde que a apuração foi salva. Salve de novo para atualizar.</div>{% endif %}
+<form method="post" class="d-flex gap-2 no-print">{% csrf_token %}<input type="hidden" name="competencia" value="{{ comp|date:'Y-m' }}">
+  <button name="acao" value="salvar" class="btn btn-primary btn-sm"><i class="bi bi-save"></i> Salvar apuração</button>
+  {% if ap and not ap.conferida and not diferente %}<button name="acao" value="conferir" class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Marcar como conferida (bateu com o PGDAS-D)</button>{% endif %}
+</form>
+<p class="small text-muted mt-3">Cálculo para conferência. A apuração oficial e a emissão do DAS são feitas no PGDAS-D.</p>
+{% endblock %}

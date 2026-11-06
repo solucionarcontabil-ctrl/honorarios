@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Lançamento — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<h5>{% if lanc %}Lançamento nº {{ lanc.numero }} <small class="text-muted">· {{ lanc.get_origem_display }} · criado por {{ lanc.criado_por|default:"—" }} em {{ lanc.criado_em|date:"d/m/Y H:i" }}{% if lanc.alterado_em %} · alterado por {{ lanc.alterado_por }} em {{ lanc.alterado_em|date:"d/m/Y H:i" }}{% endif %}</small>{% else %}Novo lançamento{% endif %}</h5>
+{% if bloqueado %}<div class="alert alert-warning"><i class="bi bi-lock"></i> {{ bloqueado }}</div>{% endif %}
+<form method="post" id="form-lanc">{% csrf_token %}
+<fieldset {% if bloqueado %}disabled{% endif %}>
+<div class="card shadow-sm mb-3"><div class="card-body"><div class="row g-3">
+  <div class="col-md-2"><label class="form-label small fw-semibold">Data</label><input type="date" name="data" value="{{ data_inicial }}" class="form-control" required></div>
+  <div class="col-md-2"><label class="form-label small fw-semibold">Documento</label><input name="documento" value="{{ documento }}" class="form-control"></div>
+  <div class="col-md-8"><label class="form-label small fw-semibold">Histórico</label><input name="historico" value="{{ historico }}" list="lista-historicos" class="form-control" required maxlength="300"></div>
+</div></div></div>
+<datalist id="lista-contas">{% for c in contas %}<option value="{{ c.reduzido }} - {{ c.codigo }} {{ c.nome }}">{% endfor %}</datalist>
+<datalist id="lista-historicos">{% for h in historicos %}<option value="{{ h.texto }}">{% endfor %}</datalist>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0 align-middle" id="partidas">
+  <thead class="table-light"><tr><th style="width:45%">Conta (reduzido ou código)</th><th style="width:90px">D/C</th><th style="width:160px">Valor</th><th>Complemento</th></tr></thead>
+  <tbody>{% for l in linhas %}<tr>
+    <td><input name="p_conta" value="{{ l.conta }}" list="lista-contas" class="form-control form-control-sm"></td>
+    <td><select name="p_tipo" class="form-select form-select-sm tipo"><option value="D" {% if l.tipo == 'D' %}selected{% endif %}>D</option><option value="C" {% if l.tipo == 'C' %}selected{% endif %}>C</option></select></td>
+    <td><input name="p_valor" value="{{ l.valor }}" class="form-control form-control-sm text-end valor" inputmode="decimal" placeholder="0,00"></td>
+    <td><input name="p_complemento" value="{{ l.compl }}" class="form-control form-control-sm"></td>
+  </tr>{% endfor %}</tbody>
+  <tfoot class="table-light"><tr><td class="text-end" colspan="2"><button type="button" class="btn btn-sm btn-outline-secondary float-start" id="mais"><i class="bi bi-plus"></i> linha</button>Débitos / Créditos</td>
+    <td class="text-end fw-semibold" id="totais">—</td><td id="dif"></td></tr></tfoot>
+</table></div></div>
+<div class="d-flex flex-wrap gap-2 mt-3">
+  <button class="btn btn-primary" id="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+  {% if not lanc %}<button class="btn btn-outline-primary" name="continuar" value="1">Salvar e lançar outro</button>{% endif %}
+  <a href="{% url 'contabil_cliente' cliente.pk %}" class="btn btn-outline-secondary">Voltar</a>
+</div>
+</fieldset>
+</form>
+{% if lanc %}
+<div class="d-flex flex-wrap gap-3 mt-4 pt-3 border-top">
+  {% if not lanc.estornado_por and not lanc.estorno_de %}
+  <form method="post" action="{% url 'contabil_lancamento_acao' cliente.pk lanc.pk 'estornar' %}" class="d-flex gap-2 align-items-end" onsubmit="return confirm('Lançar o estorno?')">{% csrf_token %}
+    <div><label class="form-label small">Data do estorno</label><input type="date" name="data" class="form-control form-control-sm" value="{% now 'Y-m-d' %}"></div>
+    <div><label class="form-label small">Motivo</label><input name="motivo" class="form-control form-control-sm" placeholder="Ex.: conta errada"></div>
+    <button class="btn btn-sm btn-outline-warning">Estornar</button></form>
+  {% endif %}
+  {% if not bloqueado %}<form method="post" action="{% url 'contabil_lancamento_acao' cliente.pk lanc.pk 'excluir' %}" class="ms-auto align-self-end" onsubmit="return confirm('Excluir o lançamento {{ lanc.numero }}? Fica registrado na auditoria.')">{% csrf_token %}<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Excluir</button></form>{% endif %}
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script>
+const num = t => { t = (t || '').replace(/\s|R\$/g, ''); if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.'); const v = parseFloat(t); return isNaN(v) ? 0 : Math.round(v * 100) / 100; };
+const fmt = v => v.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+function somar() { let d = 0, c = 0; document.querySelectorAll('#partidas tbody tr').forEach(tr => { const v = num(tr.querySelector('.valor').value); if (tr.querySelector('.tipo').value === 'D') d += v; else c += v; });
+  d = Math.round(d * 100) / 100; c = Math.round(c * 100) / 100;
+  document.getElementById('totais').textContent = fmt(d) + ' / ' + fmt(c);
+  const dif = document.getElementById('dif'); dif.innerHTML = d === c && d > 0 ? '<span class="text-success"><i class="bi bi-check-circle"></i> fechado</span>' : '<span class="text-danger">diferença ' + fmt(Math.abs(d - c)) + '</span>'; }
+document.getElementById('partidas').addEventListener('input', somar); document.getElementById('partidas').addEventListener('change', somar);
+document.getElementById('mais').onclick = () => { const tb = document.querySelector('#partidas tbody'); const n = tb.rows[0].cloneNode(true); n.querySelectorAll('input').forEach(i => i.value = ''); tb.appendChild(n); };
+somar();
+</script>{% endblock %}

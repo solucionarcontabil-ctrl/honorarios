@@ -1,0 +1,7 @@
+<form class="row g-2 mb-3 align-items-end no-print">
+  <div class="col-auto"><label class="form-label small">De</label><input type="date" name="de" value="{{ de|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até</label><input type="date" name="ate" value="{{ ate|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  {{ extra|default:"" }}
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Ver</button></div>
+  <div class="col-auto"><button type="button" onclick="print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i> Imprimir</button></div>
+</form>

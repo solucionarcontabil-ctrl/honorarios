@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titulo %}Fechamento — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold"><i class="bi bi-lock"></i> Fechar período</div><div class="card-body">
+    <p class="small">Depois de fechar, nenhum lançamento até essa data pode ser incluído, alterado ou excluído (NBC ITG 2000). Correções são feitas por <b>estorno</b> com data posterior. Feche depois de conferir o balancete e de entregar as obrigações do mês.</p>
+    <form method="post" class="d-flex gap-2 align-items-end">{% csrf_token %}<input type="hidden" name="acao" value="fechar">
+      <div><label class="form-label small">Fechar até</label><input type="date" name="ate" class="form-control form-control-sm" value="{{ fechado_ate|date:'Y-m-d' }}" required></div>
+      <button class="btn btn-sm btn-primary" onclick="return confirm('Fechar o período?')">Fechar</button></form>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-header bg-white fw-semibold"><i class="bi bi-flag"></i> Encerramento do exercício</div><div class="card-body">
+    <p class="small">Zera as contas de resultado contra a <b>Apuração do resultado do exercício</b> e transfere o lucro ou o prejuízo para o PL, com data de 31/12. Faça <b>antes</b> de fechar dezembro. Exercícios já encerrados: {% for a in encerrados %}<b>{{ a }}</b>{% if not forloop.last %}, {% endif %}{% empty %}nenhum{% endfor %}.</p>
+    <form method="post" class="d-flex gap-2 align-items-end">{% csrf_token %}<input type="hidden" name="acao" value="encerrar">
+      <div><label class="form-label small">Ano</label><input type="number" name="ano" class="form-control form-control-sm" value="{{ ano_sugerido }}" style="width:110px"></div>
+      <button class="btn btn-sm btn-outline-primary" onclick="return confirm('Gerar os lançamentos de encerramento?')">Encerrar exercício</button></form>
+  </div></div></div>
+  {% if user.is_staff and fechado_ate %}<div class="col-12"><div class="card shadow-sm border-warning"><div class="card-header bg-warning-subtle fw-semibold">Reabrir período (excepcional)</div><div class="card-body">
+    <p class="small mb-2">Use só em retificação (ex.: ECD retificadora). Fica registrado na auditoria com o motivo.</p>
+    <form method="post" class="row g-2 align-items-end">{% csrf_token %}<input type="hidden" name="acao" value="reabrir">
+      <div class="col-auto"><label class="form-label small">Deixar fechado até (vazio = reabrir tudo)</label><input type="date" name="ate" class="form-control form-control-sm"></div>
+      <div class="col-md-5"><label class="form-label small">Motivo</label><input name="motivo" class="form-control form-control-sm" required></div>
+      <div class="col-auto"><button class="btn btn-sm btn-warning" onclick="return confirm('Reabrir o período?')">Reabrir</button></div></form>
+  </div></div></div>{% endif %}
+</div>
+{% endblock %}

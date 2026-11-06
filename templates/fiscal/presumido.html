@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Presumido — {{ c }}{% endblock %}
+{% block conteudo %}
+{% include "fiscal/_menu.html" %}
+<form class="row g-2 mb-3 align-items-end no-print"><div class="col-auto"><label class="form-label small">Competência</label><input type="month" name="competencia" value="{{ comp|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.submit()"></div>
+  <div class="col-auto"><button type="button" onclick="print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button></div></form>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>Mensal — {{ comp|date:"m/Y" }}</b> <small class="text-muted">PIS/COFINS cumulativos e ISS</small></div><div class="card-body">
+    {% for a in m.alertas %}<div class="alert alert-light border small py-1">{{ a }}</div>{% endfor %}
+    <table class="table table-sm small"><tr><th>Receita bruta</th><td class="text-end">{{ m.base|brl }}</td></tr><tr><th>PIS (0,65%)</th><td class="text-end">{{ m.pis|brl }}</td></tr>
+      <tr><th>COFINS (3%)</th><td class="text-end">{{ m.cofins|brl }}</td></tr><tr><th>ISS</th><td class="text-end">{{ m.iss|brl }}</td></tr>
+      <tr class="fw-bold"><th>Total</th><td class="text-end">{{ m.total|brl }}</td></tr></table>
+    <ul class="small text-muted ps-3">{% for x in m.memoria %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% include "fiscal/_apuracao_status.html" with ap=ap_m %}
+    <form method="post" class="d-flex gap-2 no-print">{% csrf_token %}<input type="hidden" name="competencia" value="{{ comp|date:'Y-m' }}">
+      <button name="acao" value="salvar_mensal" class="btn btn-primary btn-sm">Salvar</button>
+      {% if ap_m and not ap_m.conferida %}<button name="acao" value="conferir_mensal" class="btn btn-success btn-sm">Conferida</button>{% endif %}</form>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-header bg-white"><b>Trimestral — {{ tri }}º trimestre de {{ comp|date:"Y" }}</b> <small class="text-muted">IRPJ e CSLL</small></div><div class="card-body">
+    {% if not fim_tri %}<div class="alert alert-info small py-1">O trimestre ainda não terminou: valores parciais.</div>{% endif %}
+    {% for a in t.alertas %}<div class="alert alert-light border small py-1">{{ a }}</div>{% endfor %}
+    <form class="row g-2 mb-2 no-print"><input type="hidden" name="competencia" value="{{ comp|date:'Y-m' }}">
+      <div class="col-6"><label class="form-label small">Outras receitas (financeiras etc.)</label><input name="outras" value="{{ params.outras }}" class="form-control form-control-sm" inputmode="decimal"></div>
+      <div class="col-6"><label class="form-label small">Meses de atividade no trimestre</label><select name="meses" class="form-select form-select-sm">{% for n in "321" %}<option {% if params.meses == n %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+      <div class="col-6"><label class="form-label small">IRRF retido a compensar</label><input name="irrf" value="{{ params.irrf }}" class="form-control form-control-sm" inputmode="decimal"></div>
+      <div class="col-6"><label class="form-label small">CSLL retida a compensar</label><input name="csll_retida" value="{{ params.csll_retida }}" class="form-control form-control-sm" inputmode="decimal"></div>
+      <div class="col-12"><button class="btn btn-sm btn-outline-primary">Recalcular</button></div></form>
+    <table class="table table-sm small"><tr><th>Base IRPJ</th><td class="text-end">{{ t.base_irpj|brl }}</td></tr><tr><th>IRPJ (15% + adicional {{ t.adicional|brl }})</th><td class="text-end">{{ t.irpj|brl }}</td></tr>
+      <tr><th>Base CSLL</th><td class="text-end">{{ t.base_csll|brl }}</td></tr><tr><th>CSLL (9%)</th><td class="text-end">{{ t.csll|brl }}</td></tr>
+      <tr class="fw-bold"><th>Total</th><td class="text-end">{{ t.total|brl }}</td></tr></table>
+    <ul class="small text-muted ps-3">{% for x in t.memoria %}<li>{{ x }}</li>{% endfor %}{% for x in t.quotas %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% include "fiscal/_apuracao_status.html" with ap=ap_t %}
+    <form method="post" class="d-flex gap-2 no-print">{% csrf_token %}<input type="hidden" name="competencia" value="{{ comp|date:'Y-m' }}">
+      <input type="hidden" name="outras" value="{{ params.outras }}"><input type="hidden" name="irrf" value="{{ params.irrf }}"><input type="hidden" name="csll_retida" value="{{ params.csll_retida }}"><input type="hidden" name="meses" value="{{ params.meses|default:'3' }}">
+      <button name="acao" value="salvar_trimestral" class="btn btn-primary btn-sm">Salvar</button>
+      {% if ap_t and not ap_t.conferida %}<button name="acao" value="conferir_trimestral" class="btn btn-success btn-sm">Conferida</button>{% endif %}</form>
+  </div></div></div>
+</div>
+<p class="small text-muted mt-3">Cálculo para conferência. Declare na DCTFWeb (com MIT) e emita os DARFs pelo sistema oficial.</p>
+{% endblock %}

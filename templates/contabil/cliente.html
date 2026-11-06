@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Lançamentos — {{ cliente }}{% endblock %}
+{% block conteudo %}
+{% include "contabil/_menu.html" %}
+{% if not contas %}<div class="alert alert-warning">Este cliente ainda não tem plano de contas. <a href="{% url 'contabil_plano' cliente.pk %}">Criar agora</a>.</div>{% endif %}
+{% if pendentes_extrato %}<div class="alert alert-info small"><i class="bi bi-bank"></i> {{ pendentes_extrato }} movimento(s) de extrato aguardando contabilização. <a href="{% url 'contabil_extrato' cliente.pk %}">Ver</a></div>{% endif %}
+<form class="row g-2 mb-3 align-items-end">
+  <div class="col-auto"><label class="form-label small">De</label><input type="date" name="de" value="{{ de|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Até</label><input type="date" name="ate" value="{{ ate|date:'Y-m-d' }}" class="form-control form-control-sm"></div>
+  <div class="col-md-3"><label class="form-label small">Conta</label><input name="conta" list="lista-contas" value="{{ filtros.conta }}" class="form-control form-control-sm" placeholder="reduzido ou código"></div>
+  <div class="col-md-2"><label class="form-label small">Histórico</label><input name="q" value="{{ filtros.q }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><label class="form-label small">Origem</label><select name="origem" class="form-select form-select-sm"><option value="">Todas</option>{% for v, n in origens %}<option value="{{ v }}" {% if filtros.origem == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i></button></div>
+</form>
+<datalist id="lista-contas">{% for c in contas %}<option value="{{ c.reduzido }} - {{ c.codigo }} {{ c.nome }}">{% endfor %}</datalist>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+  <thead class="table-light"><tr><th>Nº</th><th>Data</th><th>Histórico</th><th>Partidas</th><th class="text-end">Valor</th><th>Origem</th><th></th></tr></thead>
+  <tbody>{% for l in lancamentos %}<tr class="{% if l.data <= fechado_ate %}text-body-secondary{% endif %}">
+    <td>{{ l.numero }}</td><td class="text-nowrap">{{ l.data|date:"d/m/Y" }}</td>
+    <td>{{ l.historico }}{% if l.documento %} <small class="text-muted">doc {{ l.documento }}</small>{% endif %}{% if l.estorno_de %} <span class="badge bg-secondary">estorno do {{ l.estorno_de.numero }}</span>{% endif %}{% if l.estornado_por %} <span class="badge bg-warning text-dark">estornado</span>{% endif %}</td>
+    <td class="small">{% for p in l.partidas.all %}<div><b>{{ p.tipo }}</b> {{ p.conta.reduzido }} {{ p.conta.nome|truncatechars:32 }} <span class="text-muted">{{ p.valor|brl }}</span></div>{% endfor %}</td>
+    <td class="text-end text-nowrap">{{ l.valor|brl }}</td><td class="small">{{ l.get_origem_display }}</td>
+    <td class="text-end text-nowrap">
+      <a href="{% url 'contabil_lancamento' cliente.pk l.pk %}" class="btn btn-sm btn-link p-0" title="Abrir"><i class="bi bi-pencil"></i></a>
+    </td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum lançamento no período.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

@@ -1,0 +1,20 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+  <div><h4 class="mb-0"><i class="bi bi-journal-text"></i> Contabilidade — <a href="{% url 'cliente_detalhe' cliente.pk %}" class="text-decoration-none">{{ cliente }}</a></h4>
+    <div class="small text-muted">{{ cliente.documento_formatado }} · {{ cliente.get_regime_display }} · {% if fechado_ate %}<i class="bi bi-lock"></i> fechado até <b>{{ fechado_ate|date:"d/m/Y" }}</b>{% else %}nenhum período fechado{% endif %}</div></div>
+  <a href="{% url 'contabil_lancamento_novo' cliente.pk %}" class="btn btn-primary btn-sm no-print"><i class="bi bi-plus-lg"></i> Lançamento</a>
+</div>
+{% with u=request.resolver_match.url_name %}
+<ul class="nav nav-tabs mb-3 small no-print">
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_cliente' %}active{% endif %}" href="{% url 'contabil_cliente' cliente.pk %}">Lançamentos</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_extrato' %}active{% endif %}" href="{% url 'contabil_extrato' cliente.pk %}">Extrato (OFX)</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_notas' %}active{% endif %}" href="{% url 'contabil_notas' cliente.pk %}">Notas fiscais</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_balancete' %}active{% endif %}" href="{% url 'contabil_balancete' cliente.pk %}">Balancete</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_razao' %}active{% endif %}" href="{% url 'contabil_razao' cliente.pk %}">Razão</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_diario' %}active{% endif %}" href="{% url 'contabil_diario' cliente.pk %}">Diário</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_dre' %}active{% endif %}" href="{% url 'contabil_dre' cliente.pk %}">DRE</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_balanco' %}active{% endif %}" href="{% url 'contabil_balanco' cliente.pk %}">Balanço</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_plano' or u == 'contabil_conta' or u == 'contabil_conta_nova' %}active{% endif %}" href="{% url 'contabil_plano' cliente.pk %}">Plano de contas</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_fechamento' %}active{% endif %}" href="{% url 'contabil_fechamento' cliente.pk %}">Fechamento</a></li>
+  <li class="nav-item"><a class="nav-link {% if u == 'contabil_auditoria' %}active{% endif %}" href="{% url 'contabil_auditoria' cliente.pk %}">Auditoria</a></li>
+</ul>
+{% endwith %}

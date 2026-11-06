@@ -1,0 +1,13 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+  <div><h4 class="mb-0"><i class="bi bi-percent"></i> Fiscal — <a href="{% url 'cliente_detalhe' c.pk %}" class="text-decoration-none">{{ c }}</a></h4>
+    <div class="small text-muted">{{ c.documento_formatado }} · {{ c.get_regime_display }}</div></div>
+  <a href="{% url 'fiscal_tabelas' %}" class="btn btn-outline-secondary btn-sm no-print"><i class="bi bi-table"></i> Tabelas usadas</a>
+</div>
+{% with u=request.resolver_match.url_name %}
+<ul class="nav nav-tabs mb-3 small no-print">
+  <li class="nav-item"><a class="nav-link {% if u == 'fiscal_cliente' %}active{% endif %}" href="{% url 'fiscal_cliente' c.pk %}">Receitas e perfil</a></li>
+  {% if c.regime == 'SIMPLES' or c.regime == 'MEI' %}<li class="nav-item"><a class="nav-link {% if u == 'fiscal_simples' %}active{% endif %}" href="{% url 'fiscal_simples' c.pk %}">Simples Nacional</a></li>
+  {% else %}<li class="nav-item"><a class="nav-link {% if u == 'fiscal_presumido' %}active{% endif %}" href="{% url 'fiscal_presumido' c.pk %}">Lucro Presumido</a></li>{% endif %}
+  <li class="nav-item"><a class="nav-link {% if u == 'fiscal_cfop' %}active{% endif %}" href="{% url 'fiscal_cfop' c.pk %}">Resumo por CFOP</a></li>
+</ul>
+{% endwith %}
