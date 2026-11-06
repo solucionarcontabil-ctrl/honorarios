@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Faturamento — {{ cliente }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <div><h4 class="mb-0">Faturamento — <a href="{% url 'cliente_detalhe' cliente.pk %}" class="text-decoration-none">{{ cliente }}</a></h4>
+    <div class="text-muted">{{ cliente.get_regime_display }} · calculado pelas notas de saída autorizadas na Central de XMLs</div></div>
+  <form class="d-flex gap-2 align-items-center"><label class="small">até</label><input type="month" name="ate" value="{{ ate|date:'Y-m' }}" class="form-control form-control-sm" onchange="this.form.submit()"></form>
+</div>
+{% for a in alertas %}<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> {{ a }}</div>{% endfor %}
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">RBT12 para {{ ate|mesano }} (12 meses anteriores)</div><div class="valor">{{ rbt12|brl }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body"><div class="small text-muted">Faturado em {{ ate|date:"Y" }} (até {{ ate|mesano }})</div><div class="valor">{{ ano|brl }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-kpi shadow-sm"><div class="card-body small text-muted">
+    Limites usados: Simples {{ limites.simples|brl }} · sublimite ICMS/ISS {{ limites.sublimite|brl }} · MEI {{ limites.mei|brl }}/ano.<br>Confira se houve mudança na legislação.</div></div></div>
+</div>
+<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Mês</th><th style="width:45%"></th><th class="text-end">Faturado no mês</th><th class="text-end">RBT12 do mês</th></tr></thead>
+  <tbody>{% for l in linhas %}<tr>
+    <td><a href="{% url 'xml_cliente' cliente.pk %}?competencia={{ l.mes|date:'Y-m' }}">{{ l.mes|mesano }}</a></td>
+    <td><div class="bg-primary barra" style="width:{{ l.perc }}%"></div></td>
+    <td class="text-end">{{ l.valor|brl }}</td><td class="text-end">{{ l.rbt12|brl }}</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<p class="small text-muted mt-2">Atenção: o cálculo considera apenas os XMLs enviados ao sistema. Devoluções, vendas sem nota e receitas não faturadas não entram. Use como conferência, não como apuração oficial.</p>
+{% endblock %}

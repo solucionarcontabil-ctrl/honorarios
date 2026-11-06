@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+ <NFe><infNFe Id="NFe35261099888777000166550010000005551000005559" versao="4.00">
+  <ide><natOp>VENDA</natOp><mod>55</mod><serie>2</serie><nNF>555</nNF><dhEmi>2026-10-03T08:00:00-03:00</dhEmi><tpNF>1</tpNF></ide>
+  <emit><CNPJ>99888777000166</CNPJ><xNome>MOINHO FORNECEDOR SA</xNome></emit>
+  <dest><CNPJ>11222333000181</CNPJ><xNome>PADARIA PAO QUENTE LTDA</xNome></dest>
+  <det nItem="1"><prod><CFOP>5101</CFOP><vProd>2500.00</vProd></prod></det>
+  <total><ICMSTot><vICMS>450.00</vICMS><vNF>2500.00</vNF></ICMSTot></total>
+ </infNFe></NFe>
+ <protNFe><infProt><cStat>100</cStat></infProt></protNFe>
+</nfeProc>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+ <NFe><infNFe Id="NFe35261111222333000181550010000012341000012345" versao="4.00">
+  <ide><cUF>35</cUF><natOp>VENDA DE MERCADORIA</natOp><mod>55</mod><serie>1</serie><nNF>1234</nNF>
+   <dhEmi>2026-10-15T10:30:00-03:00</dhEmi><tpNF>1</tpNF></ide>
+  <emit><CNPJ>11222333000181</CNPJ><xNome>PADARIA PAO QUENTE LTDA</xNome><enderEmit><UF>SP</UF></enderEmit></emit>
+  <dest><CNPJ>60701190000104</CNPJ><xNome>MERCADINHO BOM PRECO EIRELI</xNome></dest>
+  <det nItem="1"><prod><cProd>1</cProd><xProd>PAO</xProd><CFOP>5102</CFOP><vProd>800.00</vProd></prod></det>
+  <det nItem="2"><prod><cProd>2</cProd><xProd>BOLO</xProd><CFOP>5405</CFOP><vProd>200.00</vProd></prod></det>
+  <total><ICMSTot><vICMS>144.00</vICMS><vST>0.00</vST><vIPI>0.00</vIPI><vPIS>6.50</vPIS><vCOFINS>30.00</vCOFINS><vNF>1000.00</vNF></ICMSTot></total>
+ </infNFe></NFe>
+ <protNFe versao="4.00"><infProt><chNFe>35261111222333000181550010000012341000012345</chNFe><cStat>100</cStat><xMotivo>Autorizado o uso da NF-e</xMotivo></infProt></protNFe>
+</nfeProc>

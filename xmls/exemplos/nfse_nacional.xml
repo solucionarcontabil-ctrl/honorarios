@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.00">
+ <infNFSe Id="NFS35503082245723174000110000000000000126100000000000012">
+  <xLocEmi>Santos</xLocEmi><nNFSe>12</nNFSe><xTribNac>Clínica odontológica</xTribNac><dhProc>2026-10-10T10:00:00-03:00</dhProc>
+  <emit><CNPJ>45723174000110</CNPJ><xNome>CLINICA SORRISO S/S</xNome><enderNac><UF>SP</UF></enderNac></emit>
+  <valores><vLiq>1950.00</vLiq><vISSQN>40.00</vISSQN></valores>
+  <DPS><infDPS Id="DPS1"><dhEmi>2026-10-10T09:55:00-03:00</dhEmi><serie>1</serie>
+   <prest><CNPJ>45723174000110</CNPJ></prest>
+   <toma><CPF>52998224725</CPF><xNome>JOAO DA SILVA</xNome></toma>
+   <serv><cServ><xDescServ>Tratamento dentário</xDescServ></cServ></serv>
+   <valores><vServPrest><vServ>2000.00</vServ></vServPrest></valores>
+  </infDPS></DPS>
+ </infNFSe>
+</NFSe>

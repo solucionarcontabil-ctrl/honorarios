@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}XMLs — {{ cliente }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <div><h4 class="mb-0"><a href="{% url 'cliente_detalhe' cliente.pk %}" class="text-decoration-none">{{ cliente }}</a> — notas fiscais</h4>
+    <div class="text-muted">{{ cliente.documento_formatado }} · {{ cliente.get_regime_display }}</div></div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'xml_faturamento' cliente.pk %}?ate={{ competencia|date:'Y-m' }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-bar-chart"></i> Faturamento 12 meses</a>
+    <a href="?{{ query }}&baixar=excel" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a href="?{{ query }}&baixar=zip" class="btn btn-primary btn-sm"><i class="bi bi-file-zip"></i> Baixar XMLs (ZIP)</a>
+  </div>
+</div>
+<form class="row g-2 mb-3 align-items-end">
+  <input type="hidden" name="aba" value="{{ aba }}">
+  <div class="col-auto"><input type="month" name="competencia" value="{{ competencia|date:'Y-m' }}" class="form-control form-control-sm"></div>
+  <div class="col-auto"><select name="modelo" class="form-select form-select-sm"><option value="">Todos os modelos</option>{% for v, n in modelos %}<option value="{{ v }}" {% if filtros.modelo == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><select name="situacao" class="form-select form-select-sm"><option value="">Qualquer situação</option>{% for v, n in situacoes %}<option value="{{ v }}" {% if filtros.situacao == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i></button></div>
+</form>
+<ul class="nav nav-tabs mb-0">
+  <li class="nav-item"><a class="nav-link {% if aba == 'emitidas' %}active{% endif %}" href="?competencia={{ competencia|date:'Y-m' }}&aba=emitidas">Emitidas ({{ qtd_emitidas }})</a></li>
+  <li class="nav-item"><a class="nav-link {% if aba == 'recebidas' %}active{% endif %}" href="?competencia={{ competencia|date:'Y-m' }}&aba=recebidas">Recebidas ({{ qtd_recebidas }})</a></li>
+</ul>
+<div class="row g-3">
+  <div class="col-lg-9">
+    <div class="card shadow-sm border-top-0 rounded-top-0"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+      <thead class="table-light"><tr><th>Modelo</th><th>Nº</th><th>Emissão</th><th>{% if aba == 'emitidas' %}Destinatário / tomador{% else %}Emitente{% endif %}</th><th>CFOP</th><th class="text-end">Valor</th><th>Situação</th></tr></thead>
+      <tbody>{% for d in docs %}<tr onclick="location='{% url 'xml_documento' d.pk %}'" style="cursor:pointer" class="{% if d.situacao != 'AUTORIZADA' %}text-muted{% endif %}">
+        <td>{{ d.get_modelo_display }}</td><td>{{ d.numero }}{% if d.serie %}<small class="text-muted">/{{ d.serie }}</small>{% endif %}</td><td>{{ d.emissao|date:"d/m/Y" }}</td>
+        <td>{% if aba == 'emitidas' %}{{ d.dest_nome|default:"(consumidor)"|truncatechars:45 }}{% else %}{{ d.emit_nome|truncatechars:45 }}{% endif %}{% if d.tipo_operacao == 'ENTRADA' %} <span class="badge bg-info text-dark">entrada</span>{% endif %}</td>
+        <td class="small">{{ d.lista_cfops }}</td><td class="text-end">{{ d.valor_total|brl }}</td>
+        <td>{% if d.situacao == 'AUTORIZADA' %}<span class="badge bg-success-subtle text-success">Autorizada</span>{% else %}<span class="badge bg-secondary">{{ d.get_situacao_display }}</span>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma nota.</td></tr>{% endfor %}</tbody>
+    </table></div></div>
+    {% if qtd > 1000 %}<div class="small text-muted mt-1">Mostrando 1000 de {{ qtd }}. O Excel e o ZIP trazem todas.</div>{% endif %}
+  </div>
+  <div class="col-lg-3">
+    <div class="card shadow-sm mb-3"><div class="card-header bg-white"><b>Totais (autorizadas)</b></div>
+      <table class="table table-sm mb-0 small">
+        <tr><th>Valor total</th><td class="text-end fw-semibold">{{ somas.total|brl }}</td></tr>
+        <tr><th>ICMS</th><td class="text-end">{{ somas.icms|brl }}</td></tr>
+        <tr><th>ICMS ST</th><td class="text-end">{{ somas.st|brl }}</td></tr>
+        <tr><th>IPI</th><td class="text-end">{{ somas.ipi|brl }}</td></tr>
+        <tr><th>PIS</th><td class="text-end">{{ somas.pis|brl }}</td></tr>
+        <tr><th>COFINS</th><td class="text-end">{{ somas.cofins|brl }}</td></tr>
+        <tr><th>ISS</th><td class="text-end">{{ somas.iss|brl }}</td></tr>
+      </table></div>
+    {% if cfops %}<div class="card shadow-sm"><div class="card-header bg-white"><b>Por CFOP</b></div>
+      <table class="table table-sm mb-0 small">{% for cfop, v in cfops %}<tr><td>{{ cfop }}</td><td class="text-end">{{ v|brl }}</td></tr>{% endfor %}</table></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

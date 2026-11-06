@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+ <NFe><infNFe Id="NFe35261111222333000181550010000012351000012350" versao="4.00">
+  <ide><natOp>VENDA</natOp><mod>55</mod><serie>1</serie><nNF>1235</nNF><dhEmi>2026-10-16T09:00:00-03:00</dhEmi><tpNF>1</tpNF></ide>
+  <emit><CNPJ>11222333000181</CNPJ><xNome>PADARIA PAO QUENTE LTDA</xNome></emit>
+  <dest><CPF>52998224725</CPF><xNome>JOAO DA SILVA</xNome></dest>
+  <det nItem="1"><prod><CFOP>5102</CFOP><vProd>300.00</vProd></prod></det>
+  <total><ICMSTot><vNF>300.00</vNF></ICMSTot></total>
+ </infNFe></NFe>
+ <protNFe><infProt><cStat>100</cStat></infProt></protNFe>
+</nfeProc>

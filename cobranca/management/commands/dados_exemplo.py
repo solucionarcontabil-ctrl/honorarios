@@ -66,4 +66,10 @@ class Command(BaseCommand):
             cli = Cliente.objects.get(documento=doc)
             Certificado.objects.get_or_create(cliente=cli, documento=doc, defaults=dict(
                 titular=cli.nome.upper(), validade_fim=hoje + timedelta(days=dias), onde_esta="Pasta do escritório"))
+        # central de XMLs: notas fictícias de exemplo
+        from pathlib import Path
+
+        from xmls.services import importar as importar_xml
+        pasta = Path(__file__).resolve().parents[3] / "xmls" / "exemplos"
+        importar_xml([(p.name, p.read_bytes()) for p in sorted(pasta.glob("*.xml"))], admin)
         self.stdout.write(self.style.SUCCESS("Dados de exemplo criados."))

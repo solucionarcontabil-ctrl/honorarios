@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RetornoConsulta xmlns="http://www.prefeitura.sp.gov.br/nfe">
+ <Cabecalho Versao="1" xmlns=""><Sucesso>true</Sucesso></Cabecalho>
+ <NFe xmlns="">
+  <ChaveNFe><InscricaoPrestador>12345678</InscricaoPrestador><NumeroNFe>777</NumeroNFe><CodigoVerificacao>XYZ9ABCD</CodigoVerificacao></ChaveNFe>
+  <DataEmissaoNFe>2026-10-22T16:20:00</DataEmissaoNFe>
+  <CPFCNPJPrestador><CNPJ>45723174000110</CNPJ></CPFCNPJPrestador><RazaoSocialPrestador>CLINICA SORRISO S/S</RazaoSocialPrestador>
+  <StatusNFe>N</StatusNFe>
+  <CPFCNPJTomador><CNPJ>60701190000104</CNPJ></CPFCNPJTomador><RazaoSocialTomador>MERCADINHO BOM PRECO</RazaoSocialTomador>
+  <ValorServicos>750.00</ValorServicos><ValorISS>15.00</ValorISS><Discriminacao>Exame admissional</Discriminacao>
+ </NFe>
+ <NFe xmlns="">
+  <ChaveNFe><InscricaoPrestador>12345678</InscricaoPrestador><NumeroNFe>778</NumeroNFe><CodigoVerificacao>XYZ9ABCE</CodigoVerificacao></ChaveNFe>
+  <DataEmissaoNFe>2026-10-23T10:00:00</DataEmissaoNFe>
+  <CPFCNPJPrestador><CNPJ>45723174000110</CNPJ></CPFCNPJPrestador><RazaoSocialPrestador>CLINICA SORRISO S/S</RazaoSocialPrestador>
+  <StatusNFe>C</StatusNFe>
+  <CPFCNPJTomador><CPF>52998224725</CPF></CPFCNPJTomador><RazaoSocialTomador>JOAO DA SILVA</RazaoSocialTomador>
+  <ValorServicos>300.00</ValorServicos><ValorISS>6.00</ValorISS>
+ </NFe>
+</RetornoConsulta>

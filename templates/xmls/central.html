@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Central de XMLs{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">Central de XMLs <small class="text-muted fs-6">{{ total_docs }} nota(s) guardada(s)</small></h4>
+  {% if qtd_sem_cliente %}<a href="{% url 'xml_sem_cliente' %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-question-circle"></i> {{ qtd_sem_cliente }} nota(s) sem cliente</a>{% endif %}
+</div>
+<div class="card shadow-sm mb-3 border-primary"><div class="card-body">
+  <form method="post" enctype="multipart/form-data" id="envio">{% csrf_token %}
+    <label class="form-label fw-semibold"><i class="bi bi-cloud-upload"></i> Enviar XMLs</label>
+    <div class="d-flex flex-wrap gap-2">
+      <input type="file" name="arquivos" multiple accept=".xml,.zip" class="form-control" style="max-width:520px" required>
+      <button class="btn btn-primary" id="btEnviar"><i class="bi bi-upload"></i> Importar</button>
+    </div>
+    <div class="form-text">NF-e, NFC-e, CT-e, eventos de cancelamento e NFS-e (padrão nacional, ABRASF e Paulistana). Pode selecionar vários arquivos ou um <b>.zip</b> com tudo, até 300 MB por envio. Notas repetidas são ignoradas.</div>
+  </form>
+</div></div>
+<form class="row g-2 mb-3 align-items-end">
+  <div class="col-auto"><label class="form-label small">Competência (mês de emissão)</label><input type="month" name="competencia" value="{{ competencia|date:'Y-m' }}" class="form-control" onchange="this.form.submit()"></div>
+</form>
+<div class="card shadow-sm mb-3"><div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+  <thead class="table-light"><tr><th>Cliente</th><th class="text-center">Emitidas</th><th class="text-end">Valor emitido</th><th class="text-center">Canceladas</th><th class="text-center">Recebidas</th><th class="text-end">Valor recebido</th><th></th></tr></thead>
+  <tbody>{% for l in linhas %}<tr>
+    <td><a href="{% url 'xml_cliente' l.cliente.pk %}?competencia={{ competencia|date:'Y-m' }}" class="fw-semibold text-decoration-none">{{ l.cliente }}</a> <small class="text-muted">{{ l.cliente.get_regime_display }}</small></td>
+    <td class="text-center">{{ l.emit.qtd|default:"—" }}</td><td class="text-end">{% if l.emit %}{{ l.emit.total|brl }}{% else %}—{% endif %}</td>
+    <td class="text-center">{% if l.emit.canc %}<span class="badge bg-secondary">{{ l.emit.canc }}</span>{% else %}—{% endif %}</td>
+    <td class="text-center">{{ l.dest.qtd|default:"—" }}</td><td class="text-end">{% if l.dest %}{{ l.dest.total|brl }}{% else %}—{% endif %}</td>
+    <td class="text-end text-nowrap"><a href="{% url 'xml_faturamento' l.cliente.pk %}" class="btn btn-sm btn-outline-secondary" title="Faturamento 12 meses"><i class="bi bi-bar-chart"></i></a>
+      <a href="{% url 'xml_cliente' l.cliente.pk %}?competencia={{ competencia|date:'Y-m' }}&baixar=zip" class="btn btn-sm btn-outline-primary" title="Baixar ZIP das emitidas (para importar no Domínio)"><i class="bi bi-file-zip"></i></a></td>
+  </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma nota com emissão em {{ competencia|mesano }}.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% if sem_xml %}<div class="small text-muted mb-3"><b>Clientes PJ sem nenhum XML em {{ competencia|mesano }} ({{ sem_xml|length }}):</b>
+  {% for c in sem_xml|slice:":40" %}{{ c }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if sem_xml|length > 40 %}…{% endif %}</div>{% endif %}
+{% if lotes %}<h6 class="mt-4">Últimos envios</h6>
+<div class="card shadow-sm"><ul class="list-group list-group-flush small">{% for lt in lotes %}
+  <a href="{% url 'xml_lote' lt.pk %}" class="list-group-item list-group-item-action">{{ lt.enviado_em|date:"d/m/Y H:i" }} · {{ lt.enviado_por|default:"—" }} · {{ lt.arquivos }} arquivo(s): <b>{{ lt.novos }} nova(s)</b>, {{ lt.repetidos }} repetida(s){% if lt.erros %}, <span class="text-danger">{{ lt.erros }} erro(s)</span>{% endif %}{% if lt.sem_cliente %}, <span class="text-warning">{{ lt.sem_cliente }} sem cliente</span>{% endif %}</a>
+{% endfor %}</ul></div>{% endif %}
+{% endblock %}
+{% block scripts %}<script>
+document.getElementById('envio').addEventListener('submit', () => { const b = document.getElementById('btEnviar'); b.disabled = true; b.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importando…'; });
+</script>{% endblock %}

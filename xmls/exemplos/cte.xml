@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cteProc xmlns="http://www.portalfiscal.inf.br/cte" versao="4.00">
+ <CTe><infCte Id="CTe35261055666777000188570010000000991000000999" versao="4.00">
+  <ide><CFOP>5353</CFOP><natOp>PRESTACAO DE SERVICO DE TRANSPORTE</natOp><mod>57</mod><serie>1</serie><nCT>99</nCT>
+   <dhEmi>2026-10-20T14:00:00-03:00</dhEmi><toma3><toma>0</toma></toma3></ide>
+  <emit><CNPJ>55666777000188</CNPJ><xNome>TRANSPORTADORA RAPIDA LTDA</xNome><enderEmit><UF>SP</UF></enderEmit></emit>
+  <rem><CNPJ>11222333000181</CNPJ><xNome>PADARIA PAO QUENTE LTDA</xNome></rem>
+  <dest><CNPJ>60701190000104</CNPJ><xNome>MERCADINHO BOM PRECO</xNome></dest>
+  <vPrest><vTPrest>150.00</vTPrest><vRec>150.00</vRec></vPrest>
+  <imp><ICMS><ICMS00><vICMS>18.00</vICMS></ICMS00></ICMS></imp>
+ </infCte></CTe>
+ <protCTe><infProt><cStat>100</cStat></infProt></protCTe>
+</cteProc>

@@ -28,6 +28,19 @@ dos clientes: cadastro, geração mensal, boleto/PIX, baixa, inadimplência e re
 | **Certificados digitais** | Envie o .pfx (A1) e a senha: o sistema lê titular, CNPJ e validade e **não guarda o arquivo nem a senha**. A3/token cadastra à mão. Avisa 30 dias antes de vencer |
 | **Importar clientes** | Planilha .xlsx ou .csv (ex.: relatório de empresas do Domínio Web). Reconhece as colunas pelo cabeçalho, não duplica e já vincula as obrigações do regime |
 
+### Módulo 3 — Central de XMLs
+
+| Tela | Para quê |
+|---|---|
+| **Enviar XMLs** | Vários arquivos ou um **.zip** (até 300 MB): NF-e, NFC-e, CT-e, eventos de cancelamento e NFS-e (padrão nacional, ABRASF e Paulistana). Notas repetidas são ignoradas, canceladas são marcadas sozinhas, e o cliente é reconhecido pelo CNPJ do emitente ou do destinatário (filiais pela raiz) |
+| **Resumo do mês** | Por cliente: quantidade e valor de notas emitidas e recebidas, canceladas e quem ficou sem nenhum XML |
+| **Notas do cliente** | Emitidas e recebidas com filtros, totais de impostos, resumo por CFOP, **Excel** e **ZIP dos XMLs para importar no Domínio** |
+| **Faturamento 12 meses** | Faturado mês a mês e **RBT12**, com alerta de sublimite e limite do Simples e do MEI (conferência, não apuração oficial) |
+| **Notas sem cliente** | Notas cujo emitente e destinatário não estão cadastrados. Depois de cadastrar ou importar os clientes, um clique liga tudo |
+
+Os XMLs ficam guardados compactados **dentro do banco**, então entram no backup diário.
+A captura automática na SEFAZ e no Portal Nacional da NFS-e vem depois, quando houver certificado.
+
 Tudo registra **quem fez** (você ou seu pai): quem criou, quem deu baixa e quem reajustou.
 
 ---

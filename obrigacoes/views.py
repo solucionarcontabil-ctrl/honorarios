@@ -303,6 +303,8 @@ def importar_clientes(request):
             return redirect("importar_clientes")
         responsavel = _usuarios().filter(pk=dados["responsavel"]).first() if dados["responsavel"] else None
         criados, atualizados = importar(dados["linhas"], responsavel)
+        from xmls.services import revincular
+        revincular()  # liga XMLs que já estavam no sistema aos clientes novos
         vinculadas = 0
         if dados["aplicar"]:
             docs = [l["dados"]["documento"] for l in dados["linhas"] if l["situacao"] == "novo"]

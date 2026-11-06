@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConsultarNfseResposta xmlns="http://www.abrasf.org.br/nfse.xsd">
+ <ListaNfse>
+  <CompNfse><Nfse><InfNfse Id="n1"><Numero>2026000045</Numero><CodigoVerificacao>ABC123</CodigoVerificacao>
+   <DataEmissao>2026-10-05T11:00:00</DataEmissao>
+   <ValoresNfse><BaseCalculo>500.00</BaseCalculo><ValorIss>10.00</ValorIss><ValorLiquidoNfse>500.00</ValorLiquidoNfse></ValoresNfse>
+   <PrestadorServico><IdentificacaoPrestador><CpfCnpj><Cnpj>33000167000101</Cnpj></CpfCnpj></IdentificacaoPrestador><RazaoSocial>STUDIO DESIGN MEI</RazaoSocial></PrestadorServico>
+   <OrgaoGerador><CodigoMunicipio>3548500</CodigoMunicipio></OrgaoGerador>
+   <DeclaracaoPrestacaoServico><InfDeclaracaoPrestacaoServico><Servico><Valores><ValorServicos>500.00</ValorServicos><ValorIss>10.00</ValorIss></Valores><Discriminacao>Criação de logotipo</Discriminacao></Servico>
+    <TomadorServico><IdentificacaoTomador><CpfCnpj><Cnpj>11222333000181</Cnpj></CpfCnpj></IdentificacaoTomador><RazaoSocial>PADARIA PAO QUENTE LTDA</RazaoSocial></TomadorServico>
+   </InfDeclaracaoPrestacaoServico></DeclaracaoPrestacaoServico>
+  </InfNfse></Nfse></CompNfse>
+ </ListaNfse>
+</ConsultarNfseResposta>

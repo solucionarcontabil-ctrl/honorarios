@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}{{ d }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <div><h4 class="mb-0">{{ d.get_modelo_display }} nº {{ d.numero }}{% if d.serie %}/{{ d.serie }}{% endif %}</h4>
+    <div class="text-muted small">Chave {{ d.chave }}</div></div>
+  <div class="d-flex gap-2 align-items-center"><span class="badge fs-6 {% if d.situacao == 'AUTORIZADA' %}bg-success{% else %}bg-secondary{% endif %}">{{ d.get_situacao_display }}</span>
+    <a href="?baixar=1" class="btn btn-primary btn-sm"><i class="bi bi-download"></i> Baixar XML</a></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><table class="table table-sm mb-0">
+    <tr><th>Emissão</th><td>{{ d.emissao|date:"d/m/Y" }}</td></tr>
+    <tr><th>Emitente</th><td>{{ d.emit_nome }} <small class="text-muted">{{ d.emit_doc }} {{ d.emit_uf }}</small>{% if d.cliente_emitente %}<br><a href="{% url 'cliente_detalhe' d.cliente_emitente.pk %}">cliente: {{ d.cliente_emitente }}</a>{% endif %}</td></tr>
+    <tr><th>{% if d.modelo == 'NFSE' or d.modelo == 'CTE' %}Tomador{% else %}Destinatário{% endif %}</th><td>{{ d.dest_nome|default:"—" }} <small class="text-muted">{{ d.dest_doc }}</small>{% if d.cliente_destinatario %}<br><a href="{% url 'cliente_detalhe' d.cliente_destinatario.pk %}">cliente: {{ d.cliente_destinatario }}</a>{% endif %}</td></tr>
+    <tr><th>Operação</th><td>{{ d.get_tipo_operacao_display }} · {{ d.natureza }}</td></tr>
+    <tr><th>CFOPs</th><td>{% for c, v in d.cfops.items %}{{ c }}: {{ v|brl }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>
+    <tr><th>Arquivo</th><td class="small">{{ d.nome_arquivo }} · importado {{ d.importado_em|date:"d/m/Y H:i" }}</td></tr>
+  </table></div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><table class="table table-sm mb-0">
+    <tr><th>Valor total</th><td class="text-end fs-5">{{ d.valor_total|brl }}</td></tr>
+    <tr><th>ICMS</th><td class="text-end">{{ d.valor_icms|brl }}</td></tr><tr><th>ICMS ST</th><td class="text-end">{{ d.valor_icms_st|brl }}</td></tr>
+    <tr><th>IPI</th><td class="text-end">{{ d.valor_ipi|brl }}</td></tr><tr><th>PIS</th><td class="text-end">{{ d.valor_pis|brl }}</td></tr>
+    <tr><th>COFINS</th><td class="text-end">{{ d.valor_cofins|brl }}</td></tr><tr><th>ISS</th><td class="text-end">{{ d.valor_iss|brl }}</td></tr>
+  </table></div></div>
+  {% if eventos %}<div class="card shadow-sm mt-3"><div class="card-header bg-white"><b>Eventos</b></div><ul class="list-group list-group-flush small">
+    {% for e in eventos %}<li class="list-group-item">{{ e.data|date:"d/m/Y H:i" }} · {{ e.descricao }} ({{ e.tipo }})</li>{% endfor %}</ul></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

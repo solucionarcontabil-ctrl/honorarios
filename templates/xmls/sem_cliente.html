@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}XMLs sem cliente{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">{{ qtd }} nota(s) sem cliente identificado</h4>
+  <form method="post" action="{% url 'xml_revincular' %}">{% csrf_token %}<button class="btn btn-primary btn-sm"><i class="bi bi-link-45deg"></i> Procurar clientes de novo</button></form>
+</div>
+<p class="text-muted small">Nem o emitente nem o destinatário dessas notas estão cadastrados como clientes. Cadastre (ou importe) o cliente e clique em <b>Procurar clientes de novo</b>. Filiais são reconhecidas pela raiz do CNPJ.</p>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-header bg-white"><b>Por emitente</b></div><table class="table table-sm mb-0 small">
+    {% for g in emit %}<tr><td>{{ g.emit_nome }}<br><span class="text-muted">{{ g.emit_doc }}</span></td><td class="text-center">{{ g.qtd }}</td><td class="text-end">{{ g.total|brl }}</td></tr>{% endfor %}</table></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-header bg-white"><b>Por destinatário</b></div><table class="table table-sm mb-0 small">
+    {% for g in dest %}<tr><td>{{ g.dest_nome }}<br><span class="text-muted">{{ g.dest_doc }}</span></td><td class="text-center">{{ g.qtd }}</td><td class="text-end">{{ g.total|brl }}</td></tr>{% endfor %}</table></div></div>
+</div>
+{% endblock %}

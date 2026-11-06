@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "cobranca",
     "obrigacoes",
+    "xmls",
 ]
 
 MIDDLEWARE = [
@@ -90,6 +91,10 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Envio de XMLs/ZIPs grandes (arquivos vão para disco temporário, não para a memória)
+DATA_UPLOAD_MAX_NUMBER_FILES = 2000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "painel"

@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% load moeda %}
+{% block titulo %}Envio de XMLs{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Envio de {{ lote.enviado_em|date:"d/m/Y H:i" }}</h4>
+  <a href="{% url 'xml_central' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Central</a>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Arquivos lidos</div><div class="fs-4">{{ lote.arquivos }}</div></div></div></div>
+  <div class="col"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Notas novas</div><div class="fs-4 text-success">{{ lote.novos }}</div></div></div></div>
+  <div class="col"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Eventos</div><div class="fs-4">{{ lote.eventos }}</div></div></div></div>
+  <div class="col"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Repetidas</div><div class="fs-4 text-muted">{{ lote.repetidos }}</div></div></div></div>
+  <div class="col"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Sem cliente</div><div class="fs-4 text-warning">{{ lote.sem_cliente }}</div></div></div></div>
+  <div class="col"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Com erro</div><div class="fs-4 text-danger">{{ lote.erros }}</div></div></div></div>
+</div>
+{% if erros %}<div class="card shadow-sm mb-3 border-danger"><div class="card-header bg-danger-subtle"><b>Arquivos não importados</b></div>
+  <ul class="list-group list-group-flush small">{% for e in erros %}<li class="list-group-item">{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+{% if docs %}<div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm mb-0">
+  <thead class="table-light"><tr><th>Modelo</th><th>Nº</th><th>Emissão</th><th>Emitente</th><th>Destinatário</th><th class="text-end">Valor</th><th>Situação</th></tr></thead>
+  <tbody>{% for d in docs %}<tr onclick="location='{% url 'xml_documento' d.pk %}'" style="cursor:pointer">
+    <td>{{ d.get_modelo_display }}</td><td>{{ d.numero }}</td><td>{{ d.emissao|date:"d/m/Y" }}</td>
+    <td>{{ d.emit_nome|truncatechars:40 }}{% if d.cliente_emitente %} <span class="badge bg-primary-subtle text-primary">cliente</span>{% endif %}</td>
+    <td>{{ d.dest_nome|truncatechars:40 }}{% if d.cliente_destinatario %} <span class="badge bg-primary-subtle text-primary">cliente</span>{% endif %}</td>
+    <td class="text-end">{{ d.valor_total|brl }}</td><td>{{ d.get_situacao_display }}</td></tr>{% endfor %}</tbody>
+</table></div></div>{% endif %}
+{% endblock %}
