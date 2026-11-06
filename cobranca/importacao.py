@@ -14,7 +14,8 @@ from .validators import cnpj_valido, cpf_valido, so_digitos
 ALIASES = {
     "nome": ["razao social", "nome empresarial", "nome da empresa", "empresa", "nome", "razao"],
     "nome_fantasia": ["nome fantasia", "fantasia", "apelido"],
-    "documento": ["cnpj/cpf", "cpf/cnpj", "cnpj", "cpf", "inscricao federal", "documento", "cnpj cpf", "cpf cnpj"],
+    "documento": ["cnpj/cpf", "cpf/cnpj", "cnpj / cpf", "cpf / cnpj", "cnpj", "cpf", "inscricao federal", "documento",
+                  "cnpj cpf", "cpf cnpj"],
     "email": ["e-mail", "email", "e mail"],
     "whatsapp": ["whatsapp", "celular", "telefone", "fone", "tel"],
     "regime": ["regime tributario", "regime", "tributacao", "forma de tributacao"],
@@ -29,8 +30,10 @@ ALIASES = {
     "uf": ["uf", "estado"],
     "observacoes": ["observacoes", "observacao"],
     "inicio_atividade": ["inicio atividades", "inicio das atividades", "data de abertura", "abertura"],
+    "natureza_juridica": ["natureza juridica", "natureza"],
+    "contador": ["contador", "contador responsavel", "responsavel no escritorio"],
 }
-CAMPOS_EXTRAS = {"inicio_atividade"}  # não são campos do cliente; vão para outros módulos
+CAMPOS_EXTRAS = {"inicio_atividade", "natureza_juridica", "contador"}  # não são campos do cliente; vão para outros módulos
 
 
 def _norm(texto):
@@ -67,6 +70,25 @@ def regime_de(texto):
     if "fisica" in t:
         return "PF"
     return "OUTRO"
+
+
+def _conferir_regime(dados, doc):
+    """Barra combinações impossíveis em vez de importar um regime errado. Retorna o aviso (ou "")."""
+    regime = dados.get("regime")
+    if not regime:
+        return ""
+    nat = _norm(dados.get("natureza_juridica", ""))
+    entidade = any(x in nat for x in ("associa", "fundac", "religios", "cooperativa"))
+    if len(doc) == 11 and regime not in ("PF", "OUTRO"):
+        dados["regime"] = ""
+        extra = " (natureza: associação — associação precisa de CNPJ; confira o cadastro)" if entidade else ""
+        return "CPF não pode estar no Simples/Presumido — mantido como pessoa física" + extra
+    if regime in ("SIMPLES", "MEI") and any(x in nat for x in ("associa", "fundac", "religios", "cooperativa")):
+        dados["regime"] = ""
+        return "associação/fundação/cooperativa não pode optar pelo Simples (LC 123, art. 3º) — defina o regime (provável imune/isenta)"
+    if regime == "PRESUMIDO" and entidade:
+        return "associação no Lucro Presumido: confira se não é imune/isenta (Lei 9.532/1997, arts. 12 e 15)"
+    return ""
 
 
 def normalizar_documento(valor):
@@ -111,7 +133,7 @@ FICHA = {  # rótulo da ficha -> cabeçalho equivalente
     "E-mail:": "E-mail", "Telefone:": "Telefone", "Insc. estadual:": "Inscrição estadual",
     "Insc. municipal:": "Inscrição municipal", "Endereço:": "Endereço", "Número:": "Número", "Bairro:": "Bairro",
     "Município:": "Município", "UF:": "UF", "CEP:": "CEP", "Responsável Legal:": "Contato",
-    "Início atividades:": "Início atividades",
+    "Início atividades:": "Início atividades", "Contador:": "Contador",
 }
 FICHA_OBS = ["Código:", "Natureza Jurídica:", "CNAE 2.3:", "Ramo de atividade:", "Contador:", "Cliente desde:",
              "Complemento:", "Módulos:"]
@@ -194,8 +216,10 @@ def analisar(nome_arquivo, conteudo):
             situacao, motivo = "erro", "CNPJ/CPF inválido"
         elif doc in vistos:
             situacao, motivo = "erro", "repetido na planilha"
+        elif (aviso := _conferir_regime(dados, doc)):
+            situacao, motivo = ("existe" if doc in existentes else "novo"), aviso
         elif doc in existentes:
-            situacao, motivo = "existe", "já cadastrado — completa só campos vazios"
+            situacao, motivo = "existe", "já cadastrado — completa só campos vazios (e o regime, se estiver como Outro)"
         else:
             situacao, motivo = "novo", ""
             if len(doc) == 14 and not dados.get("regime"):
@@ -217,7 +241,26 @@ def _data_br(texto):
         return None
 
 
+def _usuario_por_nome(nome):
+    """Acha o usuário da equipe cujo nome completo bate com o 'Contador' do Domínio."""
+    from .equipe import equipe
+    alvo = _norm(nome)
+    if not alvo:
+        return None
+    candidatos = [u for u in equipe() if _norm(u.get_full_name()) == alvo]
+    if not candidatos:  # aceita nome e último sobrenome iguais (ex.: sem o "da")
+        partes = alvo.split()
+        candidatos = [u for u in equipe() if (n := _norm(u.get_full_name()).split()) and len(partes) > 1
+                      and n[0] == partes[0] and n[-1] == partes[-1]]
+    return candidatos[0] if len(candidatos) == 1 else None
+
+
 def _extras(cliente, dados):
+    if not cliente.responsavel_id and dados.get("contador"):
+        u = _usuario_por_nome(dados["contador"])
+        if u:
+            cliente.responsavel = u
+            cliente.save(update_fields=["responsavel"])
     inicio = _data_br(dados.get("inicio_atividade"))
     if inicio:
         from fiscal.models import PerfilFiscal
@@ -241,15 +284,19 @@ def importar(linhas, responsavel=None):
             # sem regime na planilha: "Outro" até alguém completar (nunca supõe Simples)
             campos.setdefault("regime", "OUTRO" if len(d["documento"]) == 14 else "PF")
             cli = Cliente.objects.create(documento=d["documento"], responsavel=responsavel, **campos)
+            item["regime_aplicado"] = cli.regime not in ("OUTRO",)
             _extras(cli, d)
             criados += 1
         elif item["situacao"] == "existe":
             cli = Cliente.objects.get(documento=d["documento"])
             mudou = False
             for c in CAMPOS_TEXTO:
-                if d.get(c) and not getattr(cli, c):
+                vazio = not getattr(cli, c) or (c == "regime" and cli.regime == "OUTRO")  # "Outro" = ainda não definido
+                if d.get(c) and vazio and getattr(cli, c) != d[c]:
                     setattr(cli, c, _cortar(c, d[c]))
                     mudou = True
+                    if c == "regime":
+                        item["regime_aplicado"] = True
             if mudou:
                 cli.save()
                 atualizados += 1

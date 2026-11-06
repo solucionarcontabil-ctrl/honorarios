@@ -321,16 +321,18 @@ def importar_clientes(request):
             messages.error(request, "A prévia expirou. Envie a planilha de novo.")
             return redirect("importar_clientes")
         responsavel = _usuarios().filter(pk=dados["responsavel"]).first() if dados["responsavel"] else None
-        criados, atualizados = importar(dados["linhas"], responsavel)
+        linhas_imp = dados["linhas"]
+        criados, atualizados = importar(linhas_imp, responsavel)
         from xmls.services import revincular
         revincular()  # liga XMLs que já estavam no sistema aos clientes novos
         vinculadas = 0
         if dados["aplicar"]:
-            docs = [l["dados"]["documento"] for l in dados["linhas"] if l["situacao"] == "novo"]
-            for c in Cliente.objects.filter(documento__in=docs).exclude(regime="OUTRO"):
+            docs = [l["dados"]["documento"] for l in linhas_imp if l.get("regime_aplicado")]
+            for c in Cliente.objects.filter(documento__in=docs).exclude(regime__in=["OUTRO", "PF"]):
                 vinculadas += services.aplicar_padrao_regime(c)
         messages.success(request, f"{criados} cliente(s) criado(s), {atualizados} completado(s)"
-                         + (f", {vinculadas} vínculo(s) de obrigação." if dados["aplicar"] else "."))
+                         + (f", {vinculadas} vínculo(s) de obrigação." if dados["aplicar"] else ".")
+                         + " Obrigações de folha só entram para quem estiver marcado com funcionários.")
         if Cliente.objects.filter(ativo=True, regime="OUTRO").exists():
             messages.warning(request, "Clientes sem regime tributário foram importados como 'Outro'. "
                                       "Complete regime, responsável e honorário na tela de completar em lote.")

@@ -164,6 +164,7 @@ class ImportacaoDominioTest(TestCase):
 
     def test_fichas_viram_clientes(self):
         from datetime import date
+        self.fulano = get_user_model().objects.create_user("fulano", first_name="Fulano", last_name="de Tal")
 
         from fiscal.models import PerfilFiscal
 
@@ -187,6 +188,7 @@ class ImportacaoDominioTest(TestCase):
         importar(analisadas)
         p = Cliente.objects.get(documento="11222333000181")
         self.assertEqual((p.regime, p.cidade, p.cep, p.inscricao_municipal), ("OUTRO", "SAO PAULO", "01001000", "1.234.567-8"))
+        self.assertEqual(p.responsavel, self.fulano)  # "Contador: FULANO DE TAL" → usuário Fulano de Tal
         self.assertIn("CNAE 2.3 5611-2/01", p.observacoes)
         self.assertIn("Código 12", p.observacoes)
         self.assertEqual(PerfilFiscal.objects.get(cliente=p).data_inicio_atividade, date(2020, 2, 10))
@@ -206,3 +208,48 @@ class ImportacaoDominioTest(TestCase):
         self.assertEqual((ct.valor_mensal, ct.dia_vencimento), (Decimal("1250.00"), 5))
         self.assertTrue(ClienteObrigacao.objects.filter(cliente=c, obrigacao__sigla="ESOCIAL").exists())
         self.assertNotContains(self.client.get("/clientes/completar/"), "11.222.333/0001-81")  # saiu dos incompletos
+
+
+class ImportacaoRegimeTest(TestCase):
+    """Planilha de regime: cabeçalho 'CNPJ / CPF', regime por cliente, conferências de coerência."""
+
+    def planilha(self, linhas):
+        import io as _io
+
+        from openpyxl import Workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["Regime tributário por empresa"])
+        ws.append([])
+        ws.append(["Código", "Razão social", "CNPJ / CPF", "Natureza jurídica", "Município / UF", "CNAE", "Atividade",
+                    "Regime tributário"])
+        for l in linhas:
+            ws.append(l)
+        buf = _io.BytesIO()
+        wb.save(buf)
+        return buf.getvalue()
+
+    def test_atualiza_outro_e_barra_incoerencias(self):
+        from .importacao import analisar, importar
+        Cliente.objects.create(nome="Padaria", documento="11222333000181", regime="OUTRO")
+        Cliente.objects.create(nome="Clínica", documento="45723174000110", regime="REAL")  # já definido: não mexe
+        Cliente.objects.create(nome="Associação X", documento="52998224725", regime="PF")
+        Cliente.objects.create(nome="Associação Y", documento="60701190000104", regime="OUTRO")
+        Cliente.objects.create(nome="Associação Z", documento="33000167000101", regime="OUTRO")
+        arq = self.planilha([
+            [1, "PADARIA", "11.222.333/0001-81", "Sociedade Empresária Limitada", "SP", "", "", "Simples Nacional"],
+            [2, "CLINICA", "45.723.174/0001-10", "Sociedade Simples Limitada", "SP", "", "", "Lucro Presumido"],
+            [3, "ASSOC X", "529.982.247-25", "Associação Privada", "SP", "", "", "Simples Nacional"],
+            [4, "ASSOC Y", "60.701.190/0001-04", "Associação Privada", "SP", "", "", "Simples Nacional"],
+            [5, "ASSOC Z", "33.000.167/0001-01", "Associação Privada", "SP", "", "", "Lucro Presumido"]])
+        linhas, mapa, erro = analisar("regime.xlsx", arq)
+        self.assertIsNone(erro)
+        motivos = {l["dados"]["documento"]: l["motivo"] for l in linhas}
+        self.assertIn("CPF não pode", motivos["52998224725"])
+        self.assertIn("não pode optar pelo Simples", motivos["60701190000104"])
+        self.assertIn("imune/isenta", motivos["33000167000101"])
+        importar(linhas)
+        reg = dict(Cliente.objects.values_list("documento", "regime"))
+        self.assertEqual(reg, {"11222333000181": "SIMPLES", "45723174000110": "REAL", "52998224725": "PF",
+                               "60701190000104": "OUTRO", "33000167000101": "PRESUMIDO"})
+        self.assertTrue([l for l in linhas if l.get("regime_aplicado")])

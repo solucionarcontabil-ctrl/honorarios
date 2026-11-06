@@ -27,6 +27,8 @@ dos clientes: cadastro, geração mensal, boleto/PIX, baixa, inadimplência e re
 | **Tarefas avulsas** | Pedidos entre você e seu pai ("pedir extrato", "ligar para cliente"), com prazo e responsável |
 | **Certificados digitais** | Envie o .pfx (A1) e a senha: o sistema lê titular, CNPJ e validade e **não guarda o arquivo nem a senha**. A3/token cadastra à mão. Avisa 30 dias antes de vencer |
 | **Importar clientes** | Planilha .xlsx, .xls ou .csv. Lê também o relatório **"Empresas — dados cadastrais" do Domínio** (uma ficha por empresa): razão social, fantasia, CNPJ/CPF, endereço, contatos, IE/IM, início de atividades (vai para o fiscal) e, nas observações, código do Domínio, natureza jurídica, CNAE e contador. Não duplica. Sem regime na planilha, o cliente entra como "Outro" (nunca supõe Simples) |
+| **Planilha de regime** | Uma planilha com CNPJ/CPF e "Regime tributário" atualiza o regime de quem ainda está como "Outro" e já vincula as obrigações. Combinações impossíveis são barradas com aviso: CPF no Simples/Presumido, associação/fundação/cooperativa no Simples. Associação no Presumido gera alerta para conferir imunidade/isenção |
+| **Responsável automático** | O campo "Contador" do relatório do Domínio vira o responsável do cliente quando bate com o nome completo de um usuário do sistema |
 | **Completar em lote** | Grade com todos os clientes incompletos para definir regime, responsável, se tem funcionários e o honorário (cria o contrato), já vinculando as obrigações do regime |
 
 ### Módulo 3 — Central de XMLs
